@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  mongo1:
+    image: mongo:latest
+    container_name: mongo1
+    restart: always
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
+    ports:
+      - "30001:27017"
+    networks:
+      - mongo-network
+    volumes:
+      - mongo1_data:/data/db
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+
+  mongo2:
+    image: mongo:latest
+    container_name: mongo2
+    restart: always
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
+    ports:
+      - "30002:27017"
+    networks:
+      - mongo-network
+    volumes:
+      - mongo2_data:/data/db
+
+  mongo3:
+    image: mongo:latest
+    container_name: mongo3
+    restart: always
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
+    ports:
+      - "30003:27017"
+    networks:
+      - mongo-network
+    volumes:
+      - mongo3_data:/data/db
+
+volumes:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
+
+networks:
+  mongo-network:
+    driver: bridge
