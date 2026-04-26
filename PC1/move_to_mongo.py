@@ -8,16 +8,19 @@ def receive_msg(client, userdata, message):
               "RoomDestiny": msg["RoomDestiny"], "Status": msg["Status"]}
 
     if(v.move_anomalo()): #ver se e anomolo
-        colecao= bd["sensor_errors"]
-    elif(v.move_outlier()): #ver se e outlier
-        colecao= bd["outliers"]
+        colecao= bd["sensor_errors"] #manter junto ou separar? Pensava q era manter mas estamos a separar no relatorio
     else: #cc e um valor valido
+        #atualizar contador
+        #tratamento de marsamis
+
         registo["Sent"]= False
         colecao= bd["moves_received"]
 
     colecao.insert_one(registo)
 
 ##################Codigo Principal##################
+contador_marsamis= [] #falta implementar esta parte
+
 #cliente Mongo
 mongo_cliente= pymongo.MongoClient("") #q endereco e q usamos?
 bd= mongo_cliente["SensorData"] #nome da base de dados
