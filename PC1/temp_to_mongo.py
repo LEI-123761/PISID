@@ -3,14 +3,15 @@ import pymongo
 import validacoes as v
 
 def receive_msg(client, userdata, message):
+    msg= message.payload
+    registo= {"Hour": msg["Hour"], "Temperature": msg["Temperature"]}
+
     if(v.temp_anomalo()): #ver se e anomolo
-        registo= {""}
         colecao= bd["sensor_errors"]
     elif(v.temp_outlier()): #ver se e outlier
-        registo= {""}
         colecao= bd["outliers"]
     else: #cc e um valor valido
-        registo= {""}
+        registo["Sent"]= False
         colecao= bd["temps_received"]
 
     colecao.insert_one(registo)
