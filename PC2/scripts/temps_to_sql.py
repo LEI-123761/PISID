@@ -1,0 +1,20 @@
+import mysql.connector;
+import time;
+import os;
+
+print("Starting temps...");
+while True:
+    try:
+        cnx = mysql.connector.connect(
+            user=os.environ.get("TEMPS_USER"), 
+            password=os.environ.get("TEMPS_PASSORD"),
+            host=os.environ.get("HOST", "mysql"),
+            database=os.environ.get("DATABASE", "maze")
+        );
+        print("Connected to the database", flush=True);
+        break;
+    except:
+        print("Waiting for MySQL...");
+        time.sleep(2);
+
+cnx.close();

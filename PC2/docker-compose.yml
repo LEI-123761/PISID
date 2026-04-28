@@ -7,7 +7,7 @@ services:
       - "13306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: maze
+      MYSQL_DATABASE: maze 
       MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password
     volumes:
       - mysql_data:/var/lib/mysql
@@ -27,9 +27,35 @@ services:
       MYSQL_ROOT_PASSWORD: root
     networks:
       - pc2-network
-
     depends_on:
       - mysql
+
+  movements:
+    build: .
+    command: python ./scripts/moves_to_sql.py
+    depends_on:
+      - mysql
+    networks:
+      - pc2-network
+
+  temperature:
+    build: .
+    command: python ./scripts/temps_to_sql.py
+    depends_on:
+      - mysql
+    networks:
+      - pc2-network
+    environment:
+      - PYTHONUNBUFFERED=0
+
+
+  sound:
+    build: .
+    command: python ./scripts/sounds_to_sql.py
+    depends_on:
+      - mysql
+    networks:
+      - pc2-network
 
 volumes:
   mysql_data:
