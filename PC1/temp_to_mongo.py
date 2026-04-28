@@ -4,11 +4,12 @@ import validacoes as v
 
 def receive_msg(client, userdata, message):
     msg= message.payload
+    #deviamos verificar os campos q nao guardamos?
     registo= {"Hour": msg["Hour"], "Temperature": msg["Temperature"]}
 
-    if(v.temp_anomalo()): #ver se e anomolo
+    if(v.temp_anomalo(registo)): #ver se e anomolo
         colecao= bd["sensor_errors"]
-    elif(v.temp_outlier()): #ver se e outlier
+    elif(v.temp_outlier(registo)): #ver se e outlier
         colecao= bd["outliers"]
     else: #cc e um valor valido
         registo["Sent"]= False
