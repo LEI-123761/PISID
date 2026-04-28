@@ -200,13 +200,21 @@ DELIMITER ;
 --
 
 -- Permissões som script
-CREATE USER IF NOT EXISTS 'som'@'%' IDENTIFIED BY 'som_password';
-GRANT SELECT, INSERT, UPDATE, DELETE ON maze.Som TO 'som'@'%';
+CREATE USER IF NOT EXISTS 'som_user'@'%' IDENTIFIED BY 'som_password';
+GRANT ALL PRIVILEGES ON maze.Som TO 'som_user'@'%';
+GRANT Select ON maze.Simulacao TO 'som_user'@'%';
 
 -- Permissões temperatura script
-CREATE USER IF NOT EXISTS 'temperatura'@'%' IDENTIFIED BY 'temperatura_password';
-GRANT ALL PRIVILEGES ON maze.Temperatura TO 'temperatura'@'%';
+CREATE USER IF NOT EXISTS 'temperatura_user'@'%' IDENTIFIED BY 'temperatura_password';
+GRANT ALL PRIVILEGES ON maze.Temperatura TO 'temperatura_user'@'%';
+GRANT Select ON maze.Simulacao TO 'temperatura_user'@'%';
 
 -- Permissões movimentos script
-CREATE USER IF NOT EXISTS 'movimentos'@'%' IDENTIFIED BY 'movimentos_password';
-GRANT ALL PRIVILEGES ON maze.MedicoesPassagens TO 'movimentos'@'%';
+CREATE USER IF NOT EXISTS 'movimentos_user'@'%' IDENTIFIED BY 'movimentos_password';
+GRANT ALL PRIVILEGES ON maze.MedicoesPassagens TO 'movimentos_user'@'%';
+GRANT Select ON maze.Simulacao TO 'movimentos_user'@'%';
+
+
+-- Valores iniciais
+INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa) VALUES
+('Misael_Armando@iscte-iul.pt', 'Misael Armando', '912345678', 'admin', '1990-01-01', 4);
