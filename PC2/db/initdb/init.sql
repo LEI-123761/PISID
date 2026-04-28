@@ -5,28 +5,6 @@ CREATE ROLE IF NOT EXISTS 'admin';
 CREATE ROLE IF NOT EXISTS 'jogador';
 
 -- =========================
--- EQUIPA 
--- =========================
-CREATE TABLE Equipa (
-    IDEquipa INT AUTO_INCREMENT PRIMARY KEY,
-    Num INT UNIQUE NOT NULL,
-    Nome VARCHAR(100)
-);
-
--- =========================
--- SIMULACAO
--- =========================
-CREATE TABLE Simulacao (
-    IDSimulacao INT AUTO_INCREMENT PRIMARY KEY,
-    Descricao TEXT,
-    Equipa INT,
-    Status ENUM('Criado', 'Correr', 'Terminado') NOT NULL,
-    DataHoraInicio TIMESTAMP,
-
-    FOREIGN KEY (Equipa) REFERENCES Equipa(IDEquipa)
-);
-
--- =========================
 -- UTILIZADOR
 -- =========================
 CREATE TABLE Utilizador (
@@ -36,9 +14,20 @@ CREATE TABLE Utilizador (
     Telemovel VARCHAR(12),
     Tipo ENUM('admin', 'jogador'),
     DataNascimento DATE,
-    Equipa INT,
+    Equipa INT
+);
 
-    FOREIGN KEY (Equipa) REFERENCES Equipa(IDEquipa)
+-- =========================
+-- SIMULACAO
+-- =========================
+CREATE TABLE Simulacao (
+    IDSimulacao INT AUTO_INCREMENT PRIMARY KEY,
+    Descricao TEXT,
+    IDUtilizador INT,
+    Status ENUM('Criado', 'Correr', 'Terminado') NOT NULL,
+    DataHoraInicio TIMESTAMP,
+
+    FOREIGN KEY (IDUtilizador) REFERENCES Utilizador(IDUtilizador)
 );
 
 -- =========================
@@ -88,7 +77,7 @@ CREATE TABLE Mensagens (
     IDSimulacao INT,
     Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Sala INT,
-    Sensor VARCHAR(10),
+    Sensor ENUM('1', '2'), -- 1 = Temperatura, 2 = Som
     Leitura DECIMAL(6,2),
     TipoAlerta VARCHAR(50),
     Msg VARCHAR(100),
@@ -101,11 +90,11 @@ CREATE TABLE Mensagens (
 -- OCUPACAO LABIRINTO
 -- =========================
 CREATE TABLE OcupacaoLabirinto (
-    IDJogo INT,
+    IDSimulacao INT,
     Sala INT,
     NumeroMarsamisOdd INT DEFAULT 0,
     NumeroMarsamisEven INT DEFAULT 0,
 
-    PRIMARY KEY (IDJogo, Sala),
-    FOREIGN KEY (IDJogo) REFERENCES Simulacao(IDSimulacao)
+    PRIMARY KEY (IDSimulacao, Sala),
+    FOREIGN KEY (IDSimulacao) REFERENCES Simulacao(IDSimulacao)
 );
