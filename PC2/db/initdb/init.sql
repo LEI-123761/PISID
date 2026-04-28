@@ -24,7 +24,7 @@ CREATE TABLE Simulacao (
     IDSimulacao INT AUTO_INCREMENT PRIMARY KEY,
     Descricao TEXT,
     IDUtilizador INT,
-    Status ENUM('Criado', 'Correr', 'Terminado') NOT NULL,
+    Status ENUM('Criado', 'Correr', 'Terminado') NOT NULL DEFAULT 'Criado',
     DataHoraInicio TIMESTAMP,
 
     FOREIGN KEY (IDUtilizador) REFERENCES Utilizador(IDUtilizador)
@@ -77,7 +77,7 @@ CREATE TABLE Mensagens (
     IDSimulacao INT,
     Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Sala INT,
-    Sensor ENUM('1', '2'), -- 1 = Temperatura, 2 = Som
+    Sensor ENUM('TEMP', 'SOM'), -- TEMP = Temperatura, SOM = Som
     Leitura DECIMAL(6,2),
     TipoAlerta VARCHAR(50),
     Msg VARCHAR(100),
@@ -98,3 +98,98 @@ CREATE TABLE OcupacaoLabirinto (
     PRIMARY KEY (IDSimulacao, Sala),
     FOREIGN KEY (IDSimulacao) REFERENCES Simulacao(IDSimulacao)
 );
+
+CREATE TABLE Parametros (
+  IDParametros int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  IDSimulacao int(11) DEFAULT NULL,
+  -- User does not set these values, they are updated by the system based on the readings
+  TemperaturaMax decimal(4,2) DEFAULT NULL,
+  TemperaturaMin decimal(4,2) DEFAULT NULL,
+  SomMax decimal(4,2) DEFAULT NULL,
+
+  -- outliers (only read on mongo)
+  LimiarTemperatura decimal(4,2) DEFAULT 5, 
+  LimiarSom decimal(4,2) DEFAULT 5,
+
+  -- alertas (only read on mysql, can be defined by user)
+  LimiarAlertaTemperatura decimal(4,2) DEFAULT 5,
+  LimiarAlertaSom decimal(4,2) DEFAULT 5,
+
+  FOREIGN KEY (IDSimulacao) REFERENCES Simulacao(IDSimulacao)
+);
+
+--
+-- Acionadores `Temperatura`
+--
+DELIMITER $$
+CREATE TRIGGER Trg_alerta_temp AFTER INSERT ON Temperatura FOR EACH ROW BEGIN
+    DECLARE tempMax DECIMAL(4,2);
+    DECLARE tempMin DECIMAL(4,2);
+    DECLARE limiarTemp DECIMAL(4,2);
+
+    SELECT TemperaturaMax, TemperaturaMin, LimiarAlertaTemperatura
+    INTO tempMax, tempMin, limiarTemp
+    FROM Parametros
+    WHERE IDSimulacao = NEW.IDSimulacao;
+
+    IF NEW.Temperatura >= (tempMax - limiarTemp) THEN
+        INSERT INTO Mensagens (
+            IDSimulacao, Hora, Sala, Sensor, Leitura,
+            TipoAlerta, Msg, HoraEscrita
+        )
+        VALUES (
+            NEW.IDSimulacao, NEW.Hora, NULL, 'TEMP',
+            NEW.Temperatura, 'ALERTA de Temperatura',
+            'Temperatura próxima do limite máximo',
+            NOW()
+        );
+    END IF;
+
+    IF NEW.Temperatura <= (tempMin + limiarTemp) THEN
+        INSERT INTO Mensagens (
+            IDSimulacao, Hora, Sala, Sensor, Leitura,
+            TipoAlerta, Msg, HoraEscrita
+        )
+        VALUES (
+            NEW.IDSimulacao, NEW.Hora, NULL, 'TEMP',
+            NEW.Temperatura, 'ALERTA de Temperatura',
+            'Temperatura próxima do limite mínimo',
+            NOW()
+        );
+    END IF;
+END
+$$
+DELIMITER ;
+
+--
+-- Acionadores `Som`
+--
+DELIMITER $$
+CREATE TRIGGER Trg_alerta_ruido AFTER INSERT ON Som FOR EACH ROW BEGIN
+    DECLARE limiarSom DECIMAL(4,2);
+
+    SELECT LimiarAlertaSom
+    INTO limiarSom
+    FROM Parametros
+    WHERE IDSimulacao = NEW.IDSimulacao;
+
+    IF NEW.Som >= (
+        SELECT SomMax FROM Parametros
+        WHERE IDSimulacao = NEW.IDSimulacao
+    ) - limiarSom THEN
+
+        INSERT INTO Mensagens (
+            IDSimulacao, Hora, Sala, Sensor, Leitura,
+            TipoAlerta, Msg, HoraEscrita
+        )
+        VALUES (
+            NEW.IDSimulacao, NOW(), NULL, 'SOM',
+            NEW.Som, 'ALERTA de Som',
+            'Som próximo do limite máximo',
+            NOW()
+        );
+    END IF;
+
+END
+$$
+DELIMITER ;
