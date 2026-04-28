@@ -193,3 +193,20 @@ CREATE TRIGGER Trg_alerta_ruido AFTER INSERT ON Som FOR EACH ROW BEGIN
 END
 $$
 DELIMITER ;
+
+
+--
+-- Permissões
+--
+
+-- Permissões som script
+CREATE USER IF NOT EXISTS 'som'@'%' IDENTIFIED BY 'som_password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON maze.Som TO 'som'@'%';
+
+-- Permissões temperatura script
+CREATE USER IF NOT EXISTS 'temperatura'@'%' IDENTIFIED BY 'temperatura_password';
+GRANT ALL PRIVILEGES ON maze.Temperatura TO 'temperatura'@'%';
+
+-- Permissões movimentos script
+CREATE USER IF NOT EXISTS 'movimentos'@'%' IDENTIFIED BY 'movimentos_password';
+GRANT ALL PRIVILEGES ON maze.MedicoesPassagens TO 'movimentos'@'%';
