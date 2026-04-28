@@ -7,7 +7,7 @@ services:
       - "13306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: maze 
+      MYSQL_DATABASE: maze
       MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password
     volumes:
       - mysql_data:/var/lib/mysql
@@ -15,12 +15,22 @@ services:
     networks:
       - pc2-network
 
+  web:
+    image: php:apache
+    container_name: web
+    volumes:
+      - ./scripts/php:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: phpmyadmin
     restart: always
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
@@ -31,31 +41,43 @@ services:
       - mysql
 
   movements:
-    build: .
-    command: python ./scripts/moves_to_sql.py
-    depends_on:
-      - mysql
-    networks:
-      - pc2-network
-
-  temperature:
-    build: .
-    command: python ./scripts/temps_to_sql.py
+    build:
+      context: ..
+      dockerfile: PC2/Dockerfile
+    container_name: movements
+    command: python ./PC2/scripts/moves_to_sql.py
     depends_on:
       - mysql
     networks:
       - pc2-network
     environment:
-      - PYTHONUNBUFFERED=0
+      - PYTHONUNBUFFERED=1
 
-
-  sound:
-    build: .
-    command: python ./scripts/sounds_to_sql.py
+  temperature:
+    build:
+      context: ..
+      dockerfile: PC2/Dockerfile
+    container_name: temperature
+    command: python ./PC2/scripts/temps_to_sql.py
     depends_on:
       - mysql
     networks:
       - pc2-network
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  sound:
+    build:
+      context: ..
+      dockerfile: PC2/Dockerfile
+    container_name: sound
+    command: python ./PC2/scripts/sounds_to_sql.py
+    depends_on:
+      - mysql
+    networks:
+      - pc2-network
+    environment:
+      - PYTHONUNBUFFERED=1
 
 volumes:
   mysql_data:
