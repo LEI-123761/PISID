@@ -1,0 +1,78 @@
+# **DESCRICAO**
+# publisher_movimentos.py
+#
+# Este script corre no PC1 (onde está o MongoDB).
+# Lê documentos de movimentos que ainda não foram enviados
+# (Sent=False) e publica-os no broker MQTT.
+# O receiver_movimentos.py no PC2 recebe essas mensagens
+# e insere-as no MySQL.
+
+import paho.mqtt.client as mqtt
+from pymongo import MongoClient
+import json
+import time
+
+#configuração
+MONGO_URI   = "mongodb://localhost:27017/"
+DB_NAME     = "SensorData"
+COLLECTION  = "moves_received"
+MQTT_BROKER = "broker.hivemq.com"
+MQTT_PORT   = 1883
+MQTT_TOPIC  = "pisid_mazemov_4"
+CLIENT_ID   = "pisid_publisher_movimentos"
+
+# chamada automatica quando se liga ao broker
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print(f"[MOV] Ligado ao broker | session present: {flags['session present']}")
+    else:
+        print(f"[MOV] Erro ao ligar, rc={rc}")
+
+# chamada automaticamente quando o broker confirma recepção
+def on_publish(client, userdata, mid):
+    print(f"[MOV] Mensagem mid={mid} confirmada pelo broker")
+
+#ligação MongoDB
+mongo_client = MongoClient(MONGO_URI)
+collection   = mongo_client[DB_NAME][COLLECTION]
+
+
+#ligação MQTT
+# clean_session=False activa sessão persistente — o broker guarda
+# mensagens QoS 2 pendentes se o script cair e reiniciar
+mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client.on_connect = on_connect
+mqtt_client.on_publish  = on_publish
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
+# loop_start() corre o MQTT em background para não bloquear o loop principal
+mqtt_client.loop_start()
+
+print("[MOV] Publisher iniciado...")
+
+#loop principal
+while True:
+    try:
+        # busca apenas documentos ainda não enviados
+        # quando o feedback.py confirmar entrega, Sent muda para True
+        # e esses documentos deixam de aparecer aqui
+        docs = list(collection.find({"Sent": False}).sort("id_seq", 1))
+
+        for doc in docs:
+            # id_seq é o identificador incremental (SERIA IMPLEMENTADO NA INSERCAO DA NUVEM PARA O MONGO????)
+            payload = {
+                "id_seq":      doc["id_seq"],
+                "Player":      doc.get("Player"),
+                "Marsami":     doc.get("Marsami"),
+                "RoomOrigin":  doc.get("RoomOrigin"),
+                "RoomDestiny": doc.get("RoomDestiny"),
+                "Status":      doc.get("Status"),
+            }
+            # wait_for_publish() bloqueia até o handshake estar completo
+            result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=2)
+            result.wait_for_publish()
+            print(f"[MOV] Enviado id_seq={payload['id_seq']}")
+
+    except Exception as e:
+        print(f"[MOV] Erro: {e}")
+
+    time.sleep(1)
