@@ -12,10 +12,11 @@
 import paho.mqtt.client as mqtt
 import mysql.connector
 import json
+import utils
+
+from connection import connect_to_mysql
 
 #configuração
-MQTT_BROKER    = "broker.hivemq.com"
-MQTT_PORT      = 1883
 MQTT_TOPIC_SUB = "pisid_mazemov_4"
 # tópico onde publicamos confirmação após inserir no MySQL
 MQTT_TOPIC_FB  = "pisid_feedback_4"
@@ -23,39 +24,54 @@ CLIENT_ID      = "pisid_receiver_movimentos"
 
 
 MYSQL_CONFIG = {
-    "host":     "localhost",
-    "port":     13306,
-    "user":     "root",
-    "password": "root",
-    "database": "maze"
+    "host":     utils.HOST,
+    "user":     utils.MOVES_USER,
+    "password": utils.MOVES_PASSWORD,
+    "database": utils.DATABASE 
 }
 
 #ligação MySQL persistente
 # ligação aberta uma vez no arranque, mais eficiente do que
 # abrir/fechar a cada mensagem
-mysqlclient = mysql.connector.connect(**MYSQL_CONFIG)
-mycursor    = mysqlclient.cursor()
-print("[MOV] Ligado ao MySQL")
+tentativas = utils.MYSQL_ATTEMPTS
+mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
+global ID_SIMULACAO
 
-# obtém o ID da simulação activa, os inserts ficam associados a ela
-# se não houver simulação activa, mensagens são ignoradas
-mycursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
-row = mycursor.fetchone()
-ID_SIMULACAO = row[0] if row else None
+if mysqlclient:
+    mycursor = mysqlclient.cursor()
+    print("[MOV] Ligado ao MySQL")
 
-if ID_SIMULACAO is None:
-    print("[MOV] Aviso: sem simulação activa no arranque")
+    # obtém o ID da simulação activa, os inserts ficam associados a ela
+    # se não houver simulação activa ao receber mensagens, essas são ignoradas
+    ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+
+    if ID_SIMULACAO is None:
+        print("[MOV] Aviso: sem simulação activa no arranque")
+
+else: 
+    print("[MOV] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
 
 # chamada automaticamente pelo paho quando chega uma mensagem
 def on_message(client, userdata, msg):
     try:
         if ID_SIMULACAO is None:
-            print("[MOV] Sem simulação activa, a ignorar mensagem")
-            return
+            # Tenta obter id_simulacao novamente
+            ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+            if ID_SIMULACAO is None:
+                print("[MOV] Sem simulação activa, a ignorar mensagem")
+                return
 
         # msg.payload são bytes → decode() → string → json.loads() → dicionário
         data = json.loads(msg.payload.decode())
         print(f"[MOV] Recebido: {data}")
+
+        if mysqlclient is None:
+            print("[MOV] Erro: Sem conexão a base de dados, a guardar dados localmente")
+
+            with open("buffer.jsonl", "a") as file:
+                file.write(json.dumps(data) + "\n")
+
+            return
 
         # insere o movimento no MySQL
         # %s são placeholders protegidos contra SQL injection
@@ -91,18 +107,18 @@ def on_message(client, userdata, msg):
 
 #callback ligação
 # subscrição feita aqui dentro para ser refeita se o broker reiniciar
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print(f"[MOV] Ligado ao broker | session present: {flags['session present']}")
+def on_connect(client, userdata, flags, reason_code, properties=None):
+    if reason_code == 0:
+        print(f"[MOV] Ligado ao broker: {client._host}")
         client.subscribe(MQTT_TOPIC_SUB, qos=2)
     else:
-        print(f"[MOV] Erro ao ligar, rc={rc}")
+        print(f"[MOV] Erro ao ligar, rc={reason_code}")
 
 #cliente MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=False)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
+mqtt_client.connect(utils.MQTT_BROKER, utils.MQTT_PORT)
 
 print("[MOV] Receiver iniciado...")
 mqtt_client.loop_forever()

@@ -1,4 +1,3 @@
-from typing import TypedDict
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 from connection import connect_to_mysql
