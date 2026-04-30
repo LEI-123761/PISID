@@ -17,7 +17,9 @@ def connect_to_mysql(config, attempts=3, delay=2):
     # Implement a reconnection routine
     while attempt < attempts + 1:
         try:
-            return mysql.connector.connect(**config)
+          connection = mysql.connector.connect(**config)
+          connection.autocommit = True  
+          return connection
         except (mysql.connector.Error, IOError) as err:
             if (attempts is attempt):
                 # Attempts to reconnect failed; returning None

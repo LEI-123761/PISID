@@ -35,7 +35,7 @@ MYSQL_CONFIG = {
 # abrir/fechar a cada mensagem
 tentativas = utils.MYSQL_ATTEMPTS
 mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
-global ID_SIMULACAO
+ID_SIMULACAO = None
 
 if mysqlclient:
     mycursor = mysqlclient.cursor()
@@ -43,7 +43,7 @@ if mysqlclient:
 
     # obtém o ID da simulação activa, os inserts ficam associados a ela
     # se não houver simulação activa ao receber mensagens, essas são ignoradas
-    ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+    ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
     if ID_SIMULACAO is None:
         print("[MOV] Aviso: sem simulação activa no arranque")
@@ -53,10 +53,11 @@ else:
 
 # chamada automaticamente pelo paho quando chega uma mensagem
 def on_message(client, userdata, msg):
+    global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
             # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
             if ID_SIMULACAO is None:
                 print("[MOV] Sem simulação activa, a ignorar mensagem")
                 return

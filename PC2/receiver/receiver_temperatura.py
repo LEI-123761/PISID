@@ -22,33 +22,35 @@ CLIENT_ID      = "pisid_receiver_temperatura"
 
 MYSQL_CONFIG = {
     "host":     utils.HOST,
-    "user":     utils.MOVES_USER,
-    "password": utils.MOVES_PASSWORD,
+    "user":     utils.TEMPS_USER,
+    "password": utils.TEMPS_PASSWORD,
     "database": utils.DATABASE 
 }
 
 #ligação MySQL persistente
-mysqlclient = connect_to_mysql(MYSQL_CONFIG)
+tentativas = utils.MYSQL_ATTEMPTS
+mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
 
 if mysqlclient:
     mycursor    = mysqlclient.cursor()
     print("[TEMP] Ligado ao MySQL")
 
     # obtém o ID da simulação activa
-    ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+    ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
     if ID_SIMULACAO is None:
         print("[TEMP] Aviso: sem simulação activa no arranque")
 
 else: 
-    print("[MOV] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
+    print("[TEMP] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
             # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
             if ID_SIMULACAO is None:
                 print("[TEMP] Sem simulação activa, a ignorar mensagem")
                 return
@@ -84,7 +86,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
         print(f"[TEMP] Ligado ao broker: {client._host}")
         client.subscribe(MQTT_TOPIC_SUB, qos=1)
     else:
-        print(f"[TEMP] Erro ao ligar, rc={rc}")
+        print(f"[TEMP] Erro ao ligar, rc={reason_code}")
 
 #cliente MQTT
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=False)

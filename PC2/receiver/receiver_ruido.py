@@ -22,8 +22,8 @@ CLIENT_ID      = "pisid_receiver_ruido"
 
 MYSQL_CONFIG = {
     "host":     utils.HOST,
-    "user":     utils.MOVES_USER,
-    "password": utils.MOVES_PASSWORD,
+    "user":     utils.SOUNDS_USER,
+    "password": utils.SOUNDS_PASSWORD,
     "database": utils.DATABASE 
 }
 
@@ -36,19 +36,20 @@ if mysqlclient:
     print("[SOM] Ligado ao MySQL")
 
     # obtém o ID da simulação activa
-    ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+    ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
     if ID_SIMULACAO is None:
         print("[SOM] Aviso: sem simulação activa no arranque")
 else: 
-    print("[MOV] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
+    print("[SOM] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
             # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
             if ID_SIMULACAO is None:
                 print("[SOM] Sem simulação activa, a ignorar mensagem")
                 return
