@@ -36,7 +36,7 @@ if mysqlclient:
     print("[SOM] Ligado ao MySQL")
 
     # obtém o ID da simulação activa
-    ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+    ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
     if ID_SIMULACAO is None:
         print("[SOM] Aviso: sem simulação activa no arranque")
@@ -45,10 +45,11 @@ else:
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
             # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mycursor)
+            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
             if ID_SIMULACAO is None:
                 print("[SOM] Sem simulação activa, a ignorar mensagem")
                 return
