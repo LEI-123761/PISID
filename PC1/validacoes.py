@@ -15,7 +15,7 @@ def timestamp_impossivel(timestamp):
     if(len(split_data) != 3): #ou tem valores negativos ou falta campos
         return True
 
-    ano= int(split_data[0])
+    ano= int(split_data[0]) #VERIFICAR SE E ANO BISEXTO
     mes= int(split_data[1])
     dia= int(split_data[2])
     if(ano > 2026 or mes > 12 or mes == 0 or dia == 0):
@@ -30,7 +30,7 @@ def timestamp_impossivel(timestamp):
     elif(dia > 28): #se for fevereiro
         return True
 
-    #verificar hora ################NOT CHECKING MILI/DECI SECS
+    #verificar hora
     hora, min, seg= horas.split(":")
     hora= int(hora)
     min= int(min)
@@ -41,7 +41,10 @@ def timestamp_impossivel(timestamp):
     #se tudo valido
     return False
 
-def temp_anomalo(registo): #vai precisar da msg como parametro (vao todos)
+def temp_anomalo(registo, player): #vai precisar da msg como parametro (vao todos)
+    if(player != "4"):
+        return True
+
     hora= registo["Hour"]
     temp= registo["Temperature"]
     if(campo_estranho(hora) or campo_estranho(temp)): #temp/hora inclui caraters estranhas?
@@ -50,13 +53,16 @@ def temp_anomalo(registo): #vai precisar da msg como parametro (vao todos)
     if(timestamp_impossivel(hora)): #data e hora possivel?
         return True
 
-    temp= double(temp)
-    if(temp > 100.0 or temp < -100.0): #valor temp e possivel? ##########Double check valores usados com grupo
+    temp= float(temp)
+    if(temp > 100.0 or temp < -100.0): #valor temp e possivel?
         return True
 
     return False
 
-def sound_anomalo(registo):
+def sound_anomalo(registo, player):
+    if(player != "4"):
+        return True
+
     hora= registo["Hour"]
     som= registo["Sound"]
     if(campo_estranho(hora) or campo_estranho(som)): #som/hora inclui caraters estranhas?
@@ -65,36 +71,41 @@ def sound_anomalo(registo):
     if(timestamp_impossivel(hora)): #data e hora possivel?
         return True
 
-    som= double(som)
-    if(som > 100.0 or som < -100.0): #som impossivel? ##########Double check valores usados com grupo
+    som= float(som)
+    if(som > 150.0 or som < 0): #som impossivel?
         return True
 
     return False
 
-def move_anomalo(registo):
+def move_anomalo(registo, player, origem_anterior):
+    if(player != "4"):
+        return True
+
     for chave in registo: #algum campo inclui caraters estranhas?
         if(campo_estranho(registo[chave])):
             return True
 
-    #nao ha hora...
     status= int(registo["Status"])
     if(status > 2 or status < 0): #status valida?
         return True
 
     num_marsamis= 5 #get num de marsamis da cloud?
-    marsami_num= int(registo["Marsami"]) #VERIFICAR SE CONTAGEMS COMECAM EM 0 OU 1
+    marsami_num= int(registo["Marsami"])
     if(marsami_num < 1 or marsami_num > num_marsamis): #numero de marsami valido?
         return True
 
-    #sala de origem certa?
+    origem= int(registo["RoomOrigin"])
+    if(origem != origem_anterior[marsami_num-1]): #sala de origem certa?
+        return True
 
     num_salas= 0 #get from cloud
-    destino= int(registo["RoomDestiny"]) ####### DOUBLE CHECK INDEXES
+    destino= int(registo["RoomDestiny"])
     if(destino < 1 or destino > num_salas): #sala destino existe?
         return True
 
-    #sala de origem e destino conectadas?
-    #ver na cloud
+    #ler cloud
+    if(False): #sala de origem e destino conectadas?
+        return True
 
     return False
 

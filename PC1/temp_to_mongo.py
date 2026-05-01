@@ -1,16 +1,15 @@
 import paho.mqtt.client as mqtt
-import pymongo
+from pymongo import MongoClient
 import validacoes as v
 
 def receive_msg(client, userdata, message):
     msg= message.payload
-    #deviamos verificar os campos q nao guardamos?
     registo= {"Hour": msg["Hour"], "Temperature": msg["Temperature"]}
 
-    if(v.temp_anomalo(registo)): #ver se e anomolo
-        colecao= bd["sensor_errors"]
+    if(v.temp_anomalo(registo, msg["Player"])): #ver se e anomolo
+        colecao= bd["temp_errors"]
     elif(v.temp_outlier(registo)): #ver se e outlier
-        colecao= bd["outliers"]
+        colecao= bd["temp_outliers"]
     else: #cc e um valor valido
         registo["Sent"]= False
         colecao= bd["temps_received"]
@@ -19,7 +18,7 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente Mongo
-mongo_cliente= pymongo.MongoClient("") #q endereco e q usamos?
+mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT
@@ -27,6 +26,5 @@ mqtt_cliente= mqtt.Client("temp_mongo")
 mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("www.hivemq.com", 1883)
-mqtt_cliente.loop_start()
-
 mqtt_cliente.subscribe("pisid_mazetemp_4")
+mqtt_cliente.loop_start()
