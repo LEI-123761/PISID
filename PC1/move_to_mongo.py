@@ -1,5 +1,6 @@
-import paho.mqtt.client as mqtt
+import mysql.connector
 from pymongo import MongoClient
+import paho.mqtt.client as mqtt
 import time
 import threading
 import validacoes as v
@@ -36,7 +37,7 @@ def receive_msg(client, userdata, message):
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    if(v.move_anomalo(registo, player, last_room[player-1])): #ver se e anomolo
+    if(v.move_anomalo(registo, player, num_marsamis, last_room[player-1]), num_salas): #ver se e anomolo
         colecao= bd["move_errors"]
         colecao.insert_one(registo)
         return
@@ -74,15 +75,20 @@ def receive_msg(client, userdata, message):
         (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
 
 ##################Codigo Principal##################
-#cliente MySQL
+#cliente MySQL (Cloud)
+mysql_cliente= mysql.connector.connect(host="", user="", password="", database="")
+cursor= mysql_cliente.cursor()
+
+num_salas= cursor.execute("SELECT numberrooms FROM SetupMaze")
+num_marsamis= cursor.execute("SELECT numbermarsamis FROM SetupMaze")
+
+mysql_cliente.close()
 
 contador_marsamis= []
-num_salas= 4 #ler dados da cloud
 for i in num_salas:
     contador_marsamis.append((0, 0))
 
 last_room= []
-num_marsamis= 4
 for j in num_marsamis:
     last_room.append(0)
 

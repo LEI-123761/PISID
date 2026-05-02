@@ -89,7 +89,7 @@ def sound_anomalo(registo, player):
 
     return False
 
-def move_anomalo(registo, player, origem_anterior):
+def move_anomalo(registo, player, num_marsamis, origem_anterior, num_salas):
     if(player != 4):
         return True
 
@@ -101,7 +101,6 @@ def move_anomalo(registo, player, origem_anterior):
     if(status > 2 or status < 0): #status valida?
         return True
 
-    num_marsamis= 5 #get num de marsamis da cloud?
     marsami_num= registo["Marsami"]
     if(marsami_num < 1 or marsami_num > num_marsamis): #numero de marsami valido?
         return True
@@ -110,25 +109,30 @@ def move_anomalo(registo, player, origem_anterior):
     if(origem != origem_anterior[marsami_num-1]): #sala de origem certa?
         return True
 
-    num_salas= 0 #get from cloud
     destino= registo["RoomDestiny"]
     if(destino < 1 or destino > num_salas): #sala destino existe?
         return True
 
-    #ler cloud
+    #ler cloud?
     if(False): #sala de origem e destino conectadas?
         return True
 
     return False
 
-def temp_outlier():
-    #calcular media
-    #calculo com valor atual
-    #comparar com threshold
-    return False
+def temp_outlier(temp_atual, threshold):
+    media= 0 #calcular media dos 3 anteriores
+    variacao= (temp_atual - media)
 
-def sound_outlier():
-    #calcular media
-    #calculo com valor atual
-    #comparar com threshold
-    return False
+    if(variacao < threshold): #comparar com threshold
+        return False
+    else:
+        return True
+
+def sound_outlier(sound_atual, threshold):
+    media= 0 #calcular media
+    variacao= (sound_atual - media)
+
+    if(variacao < threshold): #comparar com threshold
+        return False
+    else:
+        return True

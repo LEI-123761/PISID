@@ -1,5 +1,6 @@
-import paho.mqtt.client as mqtt
+import mysql.connector
 from pymongo import MongoClient
+import paho.mqtt.client as mqtt
 import validacoes as v
 
 def receive_msg(client, userdata, message):
@@ -14,7 +15,7 @@ def receive_msg(client, userdata, message):
 
     if(v.sound_anomalo(registo, player)): #ver se e anomolo
         colecao= bd["sound_errors"]
-    elif(v.sound_outlier(registo)): #ver se e outlier
+    elif(v.sound_outlier(registo["Sound"], threshold_som)): #ver se e outlier
         colecao= bd["sound_outliers"]
     else: #cc e um valor valido
         registo["Sent"]= False
@@ -23,6 +24,14 @@ def receive_msg(client, userdata, message):
     colecao.insert_one(registo)
 
 ##################Codigo Principal##################
+#cliente MySQL
+mysql_cliente= mysql.connector.connect(host="", user="", password="", database="")
+cursor= mysql_cliente.cursor()
+
+threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ")
+
+mysql_cliente.close()
+
 #cliente Mongo
 mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
 bd= mongo_cliente["SensorData"]
