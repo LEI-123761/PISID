@@ -33,4 +33,4 @@ mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("www.hivemq.com", 1883)
 mqtt_cliente.subscribe("pisid_mazetemp_4")
-mqtt_cliente.loop_start()
+mqtt_cliente.loop_forever()

@@ -6,6 +6,18 @@ def campo_estranho(campo_dado): #verifica se o campo tem caracters estranhas
 
     return False
 
+def is_leap(year):
+    if(year%4 == 0):
+        if(year%100 == 0):
+            if(year%400 == 0):
+                return True
+            else:
+                return False
+        else:
+            return True
+    else:
+        return False
+
 #timestamp format "2024-07-04 16:29:21.281898"
 def timestamp_impossivel(timestamp):
     data, horas= timestamp.split(" ")
@@ -27,7 +39,9 @@ def timestamp_impossivel(timestamp):
         return True
     elif((mes in dias_30) and dia > 30):
         return True
-    elif(dia > 28): #se for fevereiro
+    elif((is_leap(ano) == False) and dia > 28): #se for fevereiro
+        return True
+    elif((is_leap(ano) == True) and dia > 29): #se for fevereiro e um ano bissexto
         return True
 
     #verificar hora

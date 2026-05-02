@@ -1,7 +1,28 @@
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import time
+import threading
 import validacoes as v
+
+def check_occupation_origin(origin_index):
+    time.sleep(3) #espera 3 segs
+    origem= contador_marsamis[origin_index]
+    if(origem[0] == origem[1]): #se nao sairam marsamis
+        #disparar 3 vezes
+        pass
+    else:
+        #else open doors
+        pass
+
+def check_occupation_destiny(destiny_index):
+    time.sleep(3) #espera 3 segs
+    destino= contador_marsamis[destiny_index]
+    if(destino[0] == destino[1]): #se nao sairam marsamis
+        #disparar 3 vezes
+        pass
+    else:
+        #else open doors
+        pass
 
 def receive_msg(client, userdata, message):
     #set up registo
@@ -45,28 +66,12 @@ def receive_msg(client, userdata, message):
         destino[1]+= 1
 
     #tratamento de marsamis
-    if(origem[0] == origem[1]):
+    if(origem[0] == origem[1]):  #ahhh noooo
         #close all doors
-
-        time.sleep(3) #espera 3 segs
-        origem= contador_marsamis[origin_room_index]
-        if(origem[0] == origem[1]): #se nao sairam marsamis
-            #disparar 3 vezes
-            pass
-        else:
-            #else open doors
-            pass
+        (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
     elif(destino[0] == destino[1]):
         #close all doors
-
-        time.sleep(3) #espera 3 segs
-        destino= contador_marsamis[destiny_room_index]
-        if(destino[0] == destino[1]): #se nao sairam marsamis
-            #disparar 3 vezes
-            pass
-        else:
-            #else open doors
-            pass
+        (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
 
 ##################Codigo Principal##################
 #cliente MySQL
@@ -91,4 +96,4 @@ mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("www.hivemq.com", 1883)
 mqtt_cliente.subscribe("pisid_mazemov_4")
-mqtt_cliente.loop_start()
+mqtt_cliente.loop_forever()
