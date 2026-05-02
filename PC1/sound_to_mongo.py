@@ -3,11 +3,14 @@ from pymongo import MongoClient
 import validacoes as v
 
 def receive_msg(client, userdata, message):
-    msg= message.payload.decode("utf-8")
-
     #set up registo
-    registo= {"Hour": msg["Hour"], "Sound": msg["Sound"]}
-    player= 0
+    msg= message.payload.decode("utf-8")
+    msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
+
+    player= int((msg_sections[0].split(":"))[1])
+    registo= {}
+    registo["Hour"]= ((msg_sections[1].split("\""))[1])
+    registo["Sound"]= float((msg_sections[2].split(":"))[1])
 
     if(v.sound_anomalo(registo, player)): #ver se e anomolo
         colecao= bd["sound_errors"]
@@ -30,4 +33,4 @@ mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("www.hivemq.com", 1883)
 mqtt_cliente.subscribe("pisid_mazesound_4")
-mqtt_cliente.loop_start()
+mqtt_cliente.loop_forever()

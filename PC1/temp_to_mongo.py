@@ -3,10 +3,16 @@ from pymongo import MongoClient
 import validacoes as v
 
 def receive_msg(client, userdata, message):
-    msg= message.payload
-    registo= {"Hour": msg["Hour"], "Temperature": msg["Temperature"]}
+    #set up registo
+    msg= message.payload.decode("utf-8")
+    msg_sections= msg[1:-1].split(', ')
 
-    if(v.temp_anomalo(registo, msg["Player"])): #ver se e anomolo
+    player= int((msg_sections[0].split(":"))[1])
+    registo= {}
+    registo["Hour"]= ((msg_sections[1].split("\""))[1])
+    registo["Temperature"]= float((msg_sections[2].split(":"))[1])
+
+    if(v.temp_anomalo(registo, player)): #ver se e anomolo
         colecao= bd["temp_errors"]
     elif(v.temp_outlier(registo)): #ver se e outlier
         colecao= bd["temp_outliers"]

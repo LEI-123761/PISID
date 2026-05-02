@@ -42,64 +42,62 @@ def timestamp_impossivel(timestamp):
     return False
 
 def temp_anomalo(registo, player): #vai precisar da msg como parametro (vao todos)
-    if(player != "4"):
+    if(player != 4):
         return True
 
     hora= registo["Hour"]
     temp= registo["Temperature"]
-    if(campo_estranho(hora) or campo_estranho(temp)): #temp/hora inclui caraters estranhas?
+    if(campo_estranho(hora) or campo_estranho(str(temp))): #temp/hora inclui caraters estranhas?
         return True
 
     if(timestamp_impossivel(hora)): #data e hora possivel?
         return True
 
-    temp= float(temp)
     if(temp > 100.0 or temp < -100.0): #valor temp e possivel?
         return True
 
     return False
 
 def sound_anomalo(registo, player):
-    if(player != "4"):
+    if(player != 4):
         return True
 
     hora= registo["Hour"]
     som= registo["Sound"]
-    if(campo_estranho(hora) or campo_estranho(som)): #som/hora inclui caraters estranhas?
+    if(campo_estranho(hora) or campo_estranho(str(som))): #som/hora inclui caraters estranhas?
         return True
 
     if(timestamp_impossivel(hora)): #data e hora possivel?
         return True
 
-    som= float(som)
     if(som > 150.0 or som < 0): #som impossivel?
         return True
 
     return False
 
 def move_anomalo(registo, player, origem_anterior):
-    if(player != "4"):
+    if(player != 4):
         return True
 
     for chave in registo: #algum campo inclui caraters estranhas?
-        if(campo_estranho(registo[chave])):
+        if(campo_estranho(str(registo[chave]))):
             return True
 
-    status= int(registo["Status"])
+    status= registo["Status"]
     if(status > 2 or status < 0): #status valida?
         return True
 
     num_marsamis= 5 #get num de marsamis da cloud?
-    marsami_num= int(registo["Marsami"])
+    marsami_num= registo["Marsami"]
     if(marsami_num < 1 or marsami_num > num_marsamis): #numero de marsami valido?
         return True
 
-    origem= int(registo["RoomOrigin"])
+    origem= registo["RoomOrigin"]
     if(origem != origem_anterior[marsami_num-1]): #sala de origem certa?
         return True
 
     num_salas= 0 #get from cloud
-    destino= int(registo["RoomDestiny"])
+    destino= registo["RoomDestiny"]
     if(destino < 1 or destino > num_salas): #sala destino existe?
         return True
 

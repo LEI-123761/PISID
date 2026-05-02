@@ -4,11 +4,18 @@ import time
 import validacoes as v
 
 def receive_msg(client, userdata, message):
-    msg= message.payload
-    registo= {"Marsami": msg["Marsami"], "RoomOrigin": msg["RoomOrigin"],
-              "RoomDestiny": msg["RoomDestiny"], "Status": msg["Status"]}
+    #set up registo
+    msg= message.payload.decode("utf-8")
+    msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
 
-    if(v.move_anomalo(registo, msg["Player"]), last_room): #ver se e anomolo
+    player= int((msg_sections[0].split(":"))[1])
+    registo= {}
+    registo["Marsami"]= int((msg_sections[1].split(":"))[1])
+    registo["RoomOrigin"]= int((msg_sections[2].split(":"))[1])
+    registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
+    registo["Status"]= int((msg_sections[4].split(":"))[1])
+
+    if(v.move_anomalo(registo, player, last_room[player-1])): #ver se e anomolo
         colecao= bd["move_errors"]
         colecao.insert_one(registo)
         return
@@ -19,13 +26,13 @@ def receive_msg(client, userdata, message):
     colecao.insert_one(registo)
 
     #atualizar contadores
-    last_room[int(msg["Marsami"])]= int(msg["RoomOrigin"])
+    last_room[player-1]= registo["RoomOrigin"]
 
-    origin_room_index= int(msg["RoomOrigin"]) - 1 #-1 como index
-    destiny_room_index= int(msg["RoomDestiny"]) - 1
+    origin_room_index= registo["RoomOrigin"]-1 #-1 como index
+    destiny_room_index= registo["RoomDestiny"]-1
     destino= contador_marsamis[destiny_room_index]
     if(False): #se marsami for odd
-        if(origin_room_index != -1):
+        if(origin_room_index != -1): #se sala nao for 0
             origem= contador_marsamis[origin_room_index]
             origem[0]-= 1
 
@@ -42,6 +49,7 @@ def receive_msg(client, userdata, message):
         #close all doors
 
         time.sleep(3) #espera 3 segs
+        origem= contador_marsamis[origin_room_index]
         if(origem[0] == origem[1]): #se nao sairam marsamis
             #disparar 3 vezes
             pass
@@ -52,6 +60,7 @@ def receive_msg(client, userdata, message):
         #close all doors
 
         time.sleep(3) #espera 3 segs
+        destino= contador_marsamis[destiny_room_index]
         if(destino[0] == destino[1]): #se nao sairam marsamis
             #disparar 3 vezes
             pass
