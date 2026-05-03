@@ -194,6 +194,56 @@ END
 $$
 DELIMITER ;
 
+--
+-- Acionadores `OcupacaoLabirinto`
+--
+DROP TRIGGER IF EXISTS Trg_ocupacao_labirinto;
+
+DELIMITER $$
+
+CREATE TRIGGER Trg_ocupacao_labirinto
+    AFTER INSERT ON MedicoesPassagens
+    FOR EACH ROW
+BEGIN
+
+    -- =========================
+    -- REMOVER da origem
+    -- =========================
+    IF NEW.SalaOrigem IS NOT NULL THEN
+
+        IF MOD(NEW.Marsami, 2) = 0 THEN
+            INSERT INTO OcupacaoLabirinto (IDSimulacao, Sala, NumeroMarsamisEven)
+            VALUES (NEW.IDSimulacao, NEW.SalaOrigem, -1)
+            ON DUPLICATE KEY UPDATE
+                                        NumeroMarsamisEven = NumeroMarsamisEven - 1;
+    ELSE
+            INSERT INTO OcupacaoLabirinto (IDSimulacao, Sala, NumeroMarsamisOdd)
+            VALUES (NEW.IDSimulacao, NEW.SalaOrigem, -1)
+            ON DUPLICATE KEY UPDATE
+                                     NumeroMarsamisOdd = NumeroMarsamisOdd - 1;
+END IF;
+
+END IF;
+
+    -- =========================
+    -- ADICIONAR ao destino
+    -- =========================
+    IF MOD(NEW.Marsami, 2) = 0 THEN
+        INSERT INTO OcupacaoLabirinto (IDSimulacao, Sala, NumeroMarsamisEven)
+        VALUES (NEW.IDSimulacao, NEW.SalaDestino, 1)
+        ON DUPLICATE KEY UPDATE
+                                    NumeroMarsamisEven = NumeroMarsamisEven + 1;
+ELSE
+        INSERT INTO OcupacaoLabirinto (IDSimulacao, Sala, NumeroMarsamisOdd)
+        VALUES (NEW.IDSimulacao, NEW.SalaDestino, 1)
+        ON DUPLICATE KEY UPDATE
+                             NumeroMarsamisOdd = NumeroMarsamisOdd + 1;
+END IF;
+
+END$$
+
+DELIMITER ;
+
 
 --
 -- Permissões
@@ -214,7 +264,28 @@ CREATE USER IF NOT EXISTS 'movimentos_user'@'%' IDENTIFIED BY 'movimentos_passwo
 GRANT ALL PRIVILEGES ON maze.MedicoesPassagens TO 'movimentos_user'@'%';
 GRANT Select ON maze.Simulacao TO 'movimentos_user'@'%';
 
-
+--
 -- Valores iniciais
+--
+
+--utilizador
 INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa) VALUES
-('Misael_Armando@iscte-iul.pt', 'Misael Armando', '912345678', 'admin', '1990-01-01', 4);
+('Misael_Armando@iscte-iul.pt', 'Misael Armando', '912345678', 'admin', '1990-01-01', 4)
+ON DUPLICATE KEY UPDATE Email = Email;
+
+--simulacao
+INSERT INTO Simulacao (Descricao, IDUtilizador, Status)
+VALUES ('Simulação de teste', 1, 'Criado')
+    --nao tem ON DUPLICATE KEY UPDATE na Simulacao porque: não há nenhuma chave única que provoque “duplicate key”
+
+--parametros
+INSERT INTO Parametros (
+    IDSimulacao,
+    TemperaturaMax,
+    TemperaturaMin,
+    SomMax,
+    LimiarAlertaTemperatura,
+    LimiarAlertaSom
+)
+VALUES (1, 40, 10, 80, 5, 5)
+ON DUPLICATE KEY UPDATE IDSimulacao = IDSimulacao;

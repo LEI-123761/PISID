@@ -8,7 +8,7 @@ docker compose up -d
 ```
 
 ### Requirements
-The only requiment is Docker. 
+The only requirement is Docker. 
 
 On Mac & Windows it's easier to install
 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
