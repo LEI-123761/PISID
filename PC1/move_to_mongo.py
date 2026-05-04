@@ -12,7 +12,7 @@ def check_occupation_origin(origin_index):
     if(origem[0] == origem[1]): #se nao sairam/entrarem marsamis
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((origin_index+1))+"}", 2)
-            #atualizar algum contador para a sala?
+            tentativa_gatilho[origin_index]+= 1
 
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
@@ -23,7 +23,7 @@ def check_occupation_destiny(destiny_index):
     if(destino[0] == destino[1]): #se nao sairam marsamis
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((destiny_index+1))+"}", 2)
-            #atualizar algum contador para a sala?
+            tentativa_gatilho[destiny_index]+= 1
 
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
@@ -62,12 +62,12 @@ def receive_msg(client, userdata, message):
             origem= contador_marsamis[origin_room_index]
             origem[0]-= 1
 
-            if(origem[0] == origem[1]):
+            if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3)):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
 
         destino[0]+= 1
-        if(destino[0] == destino[1]):
+        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
     else:
@@ -75,12 +75,12 @@ def receive_msg(client, userdata, message):
             origem= contador_marsamis[origin_room_index]
             origem[1]-= 1
 
-            if(origem[0] == origem[1]):
+            if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3)):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
             (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
 
         destino[1]+= 1
-        if(destino[0] == destino[1]):
+        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
 
@@ -95,8 +95,10 @@ num_marsamis= cursor.execute("SELECT numbermarsamis FROM SetupMaze")
 mysql_cliente.close()
 
 contador_marsamis= []
+tentativa_gatilho= []
 for i in num_salas:
     contador_marsamis.append((0, 0)) #((odd, even), ...)
+    tentativa_gatilho.append(0)
 
 last_room= []
 for j in num_marsamis:

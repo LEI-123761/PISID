@@ -18,7 +18,7 @@ def receive_msg(client, userdata, message):
     elif(v.sound_outlier(registo["Sound"], threshold_som, last_three)): #ver se e outlier
         colecao= bd["sound_outliers"]
     else: #cc e um valor valido
-        registo["Sent"]= Falsedock
+        registo["Sent"]= False
         colecao= bd["sounds_received"]
 
         last_three.append(registo["Sound"])
@@ -29,10 +29,11 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL
-mysql_cliente= mysql.connector.connect(host="mysql", user="", password="", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
+mysql_cliente= mysql.connector.connect(host="mysql", user="mig_som", password="mig_som4", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
 cursor= mysql_cliente.cursor()
 
-threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ")
+id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
+threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ${id_sim}")
 
 mysql_cliente.close()
 
