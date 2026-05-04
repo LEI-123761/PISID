@@ -288,3 +288,297 @@ INSERT INTO Parametros (
 )
 VALUES (1, 40, 10, 80, 5, 5)
 ON DUPLICATE KEY UPDATE IDSimulacao = IDSimulacao;
+
+-- =========================
+-- STORED PROCEDURES
+-- =========================
+
+DELIMITER $$
+
+CREATE PROCEDURE Alterar_jogo(
+    IN p_idSimulacao INT,
+    IN p_novaDescricao TEXT
+)
+BEGIN
+    UPDATE Simulacao
+    SET Descricao = p_novaDescricao
+    WHERE IDSimulacao = p_idSimulacao;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE Alterar_utilizador(
+    IN campo_a_alterar VARCHAR(50),
+    IN valor_a_alterar VARCHAR(100)
+)
+BEGIN
+
+    IF campo_a_alterar = 'Nome' THEN
+        UPDATE Utilizador
+        SET Nome = valor_a_alterar
+        WHERE Email = SUBSTRING_INDEX(USER(), '@', 2);
+
+    ELSEIF campo_a_alterar = 'Telemovel' THEN
+        UPDATE Utilizador
+        SET Telemovel = valor_a_alterar
+        WHERE Email = SUBSTRING_INDEX(USER(), '@', 2);
+
+    ELSEIF campo_a_alterar = 'DataNascimento' THEN
+        UPDATE Utilizador
+        SET DataNascimento = STR_TO_DATE(valor_a_alterar, '%Y-%m-%d')
+        WHERE Email = SUBSTRING_INDEX(USER(), '@', 2);
+
+    ELSEIF campo_a_alterar = 'Email' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Não é permitido alterar o email';
+
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Campo inválido';
+    END IF;
+
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE Cria_utilizador(
+    IN p_email VARCHAR(50),
+    IN p_nome VARCHAR(100),
+    IN p_telemovel VARCHAR(12),
+    IN p_tipo VARCHAR(10),
+    IN p_dataNascimento DATE,
+    IN p_equipa INT
+)
+BEGIN
+    DECLARE v_username VARCHAR(50);
+
+    -- Extrair username (parte antes do @)
+    SET v_username = SUBSTRING_INDEX(p_email, '@', 1);
+
+    -- Inserir na tabela Utilizador
+    INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa)
+    VALUES (p_email, p_nome, p_telemovel, p_tipo, p_dataNascimento, p_equipa);
+
+    -- Criar utilizador MySQL com host = %
+    SET @sql = CONCAT(
+        'CREATE USER ''', p_email, '''@''%'' IDENTIFIED BY ''', v_username, ''''
+    );
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    -- ADMIN: permissões totais
+    IF p_tipo = 'admin' THEN
+
+        SET @sql = CONCAT(
+            'GRANT ALL PRIVILEGES ON maze.* TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+    ELSE
+
+        -- JOGADOR: permissões limitadas
+        SET @sql = CONCAT(
+            'GRANT SELECT, UPDATE ON maze.Utilizador TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT SELECT, INSERT, UPDATE ON maze.Simulacao TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT SELECT ON maze.MedicoesPassagens TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT SELECT ON maze.Som TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT SELECT ON maze.Temperatura TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT SELECT ON maze.OcupacaoLabirinto TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT SELECT ON maze.Mensagens TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        -- Permissões para executar procedures
+        SET @sql = CONCAT(
+            'GRANT EXECUTE ON PROCEDURE maze.Remover_utilizador TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT EXECUTE ON PROCEDURE maze.Alterar_utilizador TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT EXECUTE ON PROCEDURE maze.Criar_jogo TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT(
+            'GRANT EXECUTE ON PROCEDURE maze.Alterar_jogo TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+    END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE Criar_jogo(
+    IN p_descricao TEXT
+)
+BEGIN
+    DECLARE v_email VARCHAR(255);
+    DECLARE v_idUtilizador INT;
+
+    -- Extrair o email do USER()
+    SET v_email = SUBSTRING_INDEX(USER(), '@', 2);
+
+    -- Obter o IDUtilizador correspondente
+    SELECT IDUtilizador
+    INTO v_idUtilizador
+    FROM Utilizador
+    WHERE Email = v_email
+    LIMIT 1;
+
+    -- Inserir nova simulação
+    INSERT INTO Simulacao (Descricao, IDUtilizador, Status, DataHoraInicio)
+    VALUES (p_descricao, v_idUtilizador, 'Criado', NOW());
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE Remover_utilizador()
+BEGIN
+    DECLARE v_email VARCHAR(255);
+    DECLARE v_idUtilizador INT;
+
+    -- Extrair o email do USER()
+    SET v_email = SUBSTRING_INDEX(USER(), '@', 2);
+
+    -- Remover da tabela Utilizador
+    DELETE FROM Utilizador
+    WHERE Email = v_email;
+
+    -- Extrair username MySQL (igual ao email)
+    SET @fulluser := USER();
+    SET @username := SUBSTRING_INDEX(@fulluser, '@', 2);
+
+    -- Descobrir o host real do utilizador MySQL
+    SELECT Host INTO @host
+    FROM mysql.user
+    WHERE User = @username
+    LIMIT 1;
+
+    -- Apagar utilizador MySQL se existir
+    IF @host IS NOT NULL THEN
+        SET @sql := CONCAT('DROP USER ''', @username, '''@''', @host, '''');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE Remover_utilizador(
+    IN email_a_remover VARCHAR(255)
+)
+BEGIN
+    DECLARE host_part VARCHAR(255);
+
+    -- Remover da tabela Utilizador
+    DELETE FROM Utilizador
+    WHERE Email = email_a_remover;
+
+    -- Obter o host do utilizador MySQL
+    SELECT Host INTO host_part
+    FROM mysql.user
+    WHERE User = email_a_remover
+    LIMIT 1;
+
+    -- Se existir, remover o utilizador MySQL
+    IF host_part IS NOT NULL THEN
+        SET @sql = CONCAT(
+            'DROP USER ''', email_a_remover, '''@''', host_part, ''''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE Validar_login(
+    IN p_email VARCHAR(255),
+    IN p_password VARCHAR(255),
+    OUT p_valido BOOLEAN
+)
+BEGIN
+    DECLARE v_password_real VARCHAR(255);
+
+    -- A password real é a parte antes do @
+    SET v_password_real = SUBSTRING_INDEX(p_email, '@', 1);
+
+    -- Comparar password fornecida com a password real
+    IF p_password = v_password_real THEN
+        SET p_valido = TRUE;
+    ELSE
+        SET p_valido = FALSE;
+    END IF;
+END$$
+
+DELIMITER ;
