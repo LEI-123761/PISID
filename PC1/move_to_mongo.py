@@ -40,15 +40,19 @@ def receive_msg(client, userdata, message):
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    if(v.move_anomalo(registo, player, num_marsamis, last_room[player-1]), num_salas): #ver se e anomolo
+    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[player-1]), num_salas
+    if(is_anomalo): #ver se e anomolo
+        registo["Motivo"]= razao
         colecao= bd["move_errors"]
         colecao.insert_one(registo)
         return
 
     #cc e um valor valido
+    registo["Id"]= current_id[0]
     registo["Sent"]= False
     colecao= bd["moves_received"]
     colecao.insert_one(registo)
+    current_id[0]+= 1
 
     #atualizar contadores e tratamento de marsamis
     last_room[player-1]= registo["RoomOrigin"]
@@ -105,6 +109,7 @@ for j in num_marsamis:
     last_room.append(0)
 
 #cliente Mongo
+current_id= [1]
 mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
 bd= mongo_cliente["SensorData"] #nome da base de dados
 

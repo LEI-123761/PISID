@@ -13,11 +13,14 @@ def receive_msg(client, userdata, message):
     registo["Hour"]= ((msg_sections[1].split("\""))[1])
     registo["Temperature"]= float((msg_sections[2].split(":"))[1])
 
-    if(v.temp_anomalo(registo, player)): #ver se e anomolo
+    is_anomalo, razao= v.temp_anomalo(registo, player)
+    if(is_anomalo): #ver se e anomolo
+        registo["Motivo"]= razao
         colecao= bd["temp_errors"]
     elif(v.temp_outlier(registo["Temperature"], threshold_temp, last_three)): #ver se e outlier
         colecao= bd["temp_outliers"]
     else: #cc e um valor valido
+        registo["Id"]= current_id[0]
         registo["Sent"]= False
         colecao= bd["temps_received"]
 
@@ -26,6 +29,7 @@ def receive_msg(client, userdata, message):
             del last_three[0]
 
     colecao.insert_one(registo)
+    current_id[0]+= 1
 
 ##################Codigo Principal##################
 #cliente MySQL
@@ -39,6 +43,7 @@ mysql_cliente.close()
 
 #cliente Mongo
 last_three= []
+current_id= [1]
 mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
 bd= mongo_cliente["SensorData"] #nome da base de dados
 

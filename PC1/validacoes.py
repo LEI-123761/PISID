@@ -57,67 +57,67 @@ def timestamp_impossivel(timestamp):
 
 def temp_anomalo(registo, player): #vai precisar da msg como parametro (vao todos)
     if(player != 4):
-        return True
+        return True, "Jogador Invalido"
 
     hora= registo["Hour"]
     temp= registo["Temperature"]
     if(campo_estranho(hora) or campo_estranho(str(temp))): #temp/hora inclui caraters estranhas?
-        return True
+        return True, "Carater Estranha Detetada"
 
     if(timestamp_impossivel(hora)): #data e hora possivel?
-        return True
+        return True, "Timestamp Invalido"
 
     if(temp > 100.0 or temp < -100.0): #valor temp e possivel?
-        return True
+        return True, "Valor Som Invalido"
 
-    return False
+    return False, ""
 
 def sound_anomalo(registo, player):
     if(player != 4):
-        return True
+        return True, "Jogador Invalido"
 
     hora= registo["Hour"]
     som= registo["Sound"]
     if(campo_estranho(hora) or campo_estranho(str(som))): #som/hora inclui caraters estranhas?
-        return True
+        return True, "Carater Estranha Detetada"
 
     if(timestamp_impossivel(hora)): #data e hora possivel?
-        return True
+        return True, "Timestamp Invalido"
 
     if(som > 150.0 or som < 0): #som impossivel?
-        return True
+        return True, "Valor Som Invalido"
 
-    return False
+    return False, ""
 
 def move_anomalo(registo, player, num_marsamis, origem_anterior, num_salas):
     if(player != 4):
-        return True
+        return True, "Jogador Invalido"
 
     for chave in registo: #algum campo inclui caraters estranhas?
         if(campo_estranho(str(registo[chave]))):
-            return True
+            return True, "Carater Estranha Detetada"
 
     status= registo["Status"]
     if(status > 2 or status < 0): #status valida?
-        return True
+        return True, "Status Invalida"
 
     marsami_num= registo["Marsami"]
     if(marsami_num < 1 or marsami_num > num_marsamis): #numero de marsami valido?
-        return True
+        return True, "Marsami Invalido"
 
     origem= registo["RoomOrigin"]
     if(origem != origem_anterior[marsami_num-1]): #sala de origem certa?
-        return True
+        return True, "Room Origin Invalido"
 
     destino= registo["RoomDestiny"]
     if(destino < 1 or destino > num_salas): #sala destino existe?
-        return True
+        return True, "Room Destiny Invalido"
 
-    #ler cloud?
+    #ler cloud
     if(False): #sala de origem e destino conectadas?
-        return True
+        return True, "Corredor Nao Existe"
 
-    return False
+    return False, ""
 
 def temp_outlier(temp_atual, threshold, last_three):
     if(len(last_three) == 3):
@@ -127,7 +127,7 @@ def temp_outlier(temp_atual, threshold, last_three):
     elif(len(last_three) == 1): #se for o 2o a ser inserido
         media= last_three[0]
     else: #se for o 1o a ser inserido
-        return True
+        return False
 
     variacao= (temp_atual - media)
     if(variacao < threshold): #comparar com threshold
@@ -143,7 +143,7 @@ def sound_outlier(sound_atual, threshold, last_three):
     elif(len(last_three) == 1): #se for o 2o a ser inserido
         media= last_three[0]
     else: #se for o 1o a ser inserido
-        return True
+        return False
 
     variacao= (sound_atual - media)
     if(variacao < threshold): #comparar com threshold
