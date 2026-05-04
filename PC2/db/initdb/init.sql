@@ -268,17 +268,16 @@ GRANT Select ON maze.Simulacao TO 'movimentos_user'@'%';
 -- Valores iniciais
 --
 
---utilizador
+-- utilizador
 INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa) VALUES
-('Misael_Armando@iscte-iul.pt', 'Misael Armando', '912345678', 'admin', '1990-01-01', 4)
-ON DUPLICATE KEY UPDATE Email = Email;
+('Misael_Armando@iscte-iul.pt', 'Misael Armando', '912345678', 'admin', '1990-01-01', 4);
 
---simulacao
+-- simulacao
 INSERT INTO Simulacao (Descricao, IDUtilizador, Status)
-VALUES ('Simulação de teste', 1, 'Criado')
-    --nao tem ON DUPLICATE KEY UPDATE na Simulacao porque: não há nenhuma chave única que provoque “duplicate key”
+VALUES ('Simulação de teste', 1, 'Criado');
+    -- nao tem ON DUPLICATE KEY UPDATE na Simulacao porque: não há nenhuma chave única que provoque “duplicate key”
 
---parametros
+-- parametros
 INSERT INTO Parametros (
     IDSimulacao,
     TemperaturaMax,
