@@ -1,6 +1,7 @@
 import mysql.connector
 from pymongo import MongoClient
 import paho.mqtt.client as mqtt
+import paho.mqtt.publish as publish
 import time
 import threading
 import validacoes as v
@@ -8,22 +9,24 @@ import validacoes as v
 def check_occupation_origin(origin_index):
     time.sleep(3) #espera 3 segs
     origem= contador_marsamis[origin_index]
-    if(origem[0] == origem[1]): #se nao sairam marsamis
-        #disparar 3 vezes
-        pass
-    else:
-        #else open doors
-        pass
+    if(origem[0] == origem[1]): #se nao sairam/entrarem marsamis
+        for i in range(0, 3):
+            mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((origin_index+1))+"}", 2)
+            #atualizar algum contador para a sala?
+
+    #abrir portas depois de disparar as 3 vezes ou se nao disparou
+    mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
 
 def check_occupation_destiny(destiny_index):
     time.sleep(3) #espera 3 segs
     destino= contador_marsamis[destiny_index]
     if(destino[0] == destino[1]): #se nao sairam marsamis
-        #disparar 3 vezes
-        pass
-    else:
-        #else open doors
-        pass
+        for i in range(0, 3):
+            mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((destiny_index+1))+"}", 2)
+            #atualizar algum contador para a sala?
+
+    #abrir portas depois de disparar as 3 vezes ou se nao disparou
+    mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
 
 def receive_msg(client, userdata, message):
     #set up registo
@@ -67,11 +70,11 @@ def receive_msg(client, userdata, message):
         destino[1]+= 1
 
     #tratamento de marsamis
-    if(origem[0] == origem[1]):  #ahhh noooo
-        #close all doors
+    if(origem[0] == origem[1]):
+        mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
         (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
     elif(destino[0] == destino[1]):
-        #close all doors
+        mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
         (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
 
 ##################Codigo Principal##################
