@@ -64,12 +64,12 @@ def receive_msg(client, userdata, message):
 
             if(origem[0] == origem[1]):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-                (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
+                (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
 
         destino[0]+= 1
         if(destino[0] == destino[1]):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
+            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
     else:
         if(origin_room_index != -1):
             origem= contador_marsamis[origin_room_index]
@@ -77,12 +77,12 @@ def receive_msg(client, userdata, message):
 
             if(origem[0] == origem[1]):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
+            (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
 
         destino[1]+= 1
         if(destino[0] == destino[1]):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
+            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
 
 ##################Codigo Principal##################
 #cliente MySQL (Cloud)

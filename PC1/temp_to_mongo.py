@@ -29,7 +29,7 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL
-mysql_cliente= mysql.connector.connect(host="", user="", password="", database="maze")
+mysql_cliente= mysql.connector.connect(host="mysql", user="", password="", database="maze")
 cursor= mysql_cliente.cursor()
 
 threshold_temp= cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao ==")
