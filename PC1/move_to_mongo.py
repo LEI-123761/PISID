@@ -50,36 +50,43 @@ def receive_msg(client, userdata, message):
     colecao= bd["moves_received"]
     colecao.insert_one(registo)
 
-    #atualizar contadores
+    #atualizar contadores e tratamento de marsamis
     last_room[player-1]= registo["RoomOrigin"]
 
     origin_room_index= registo["RoomOrigin"]-1 #-1 como index
     destiny_room_index= registo["RoomDestiny"]-1
+
     destino= contador_marsamis[destiny_room_index]
-    if(False): #se marsami for odd
+    if(registo["Marsami"]%2 != 0): #se marsami for odd
         if(origin_room_index != -1): #se sala nao for 0
             origem= contador_marsamis[origin_room_index]
             origem[0]-= 1
 
+            if(origem[0] == origem[1]):
+                mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
+                (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
+
         destino[0]+= 1
+        if(destino[0] == destino[1]):
+            mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
+            (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
     else:
         if(origin_room_index != -1):
             origem= contador_marsamis[origin_room_index]
             origem[1]-= 1
 
-        destino[1]+= 1
+            if(origem[0] == origem[1]):
+                mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
+            (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
 
-    #tratamento de marsamis
-    if(origem[0] == origem[1]):
-        mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-        (threading.Thread(target=check_occupation_origin(), args=(origin_room_index))).start()
-    elif(destino[0] == destino[1]):
-        mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-        (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
+        destino[1]+= 1
+        if(destino[0] == destino[1]):
+            mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
+            (threading.Thread(target=check_occupation_destiny(), args=(destiny_room_index))).start()
 
 ##################Codigo Principal##################
 #cliente MySQL (Cloud)
-mysql_cliente= mysql.connector.connect(host="", user="", password="", database="")
+mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
 cursor= mysql_cliente.cursor()
 
 num_salas= cursor.execute("SELECT numberrooms FROM SetupMaze")
@@ -89,14 +96,14 @@ mysql_cliente.close()
 
 contador_marsamis= []
 for i in num_salas:
-    contador_marsamis.append((0, 0))
+    contador_marsamis.append((0, 0)) #((odd, even), ...)
 
 last_room= []
 for j in num_marsamis:
     last_room.append(0)
 
 #cliente Mongo
-mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest") #
+mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT

@@ -15,17 +15,21 @@ def receive_msg(client, userdata, message):
 
     if(v.temp_anomalo(registo, player)): #ver se e anomolo
         colecao= bd["temp_errors"]
-    elif(v.temp_outlier(registo["Temperature"], threshold_temp)): #ver se e outlier
+    elif(v.temp_outlier(registo["Temperature"], threshold_temp, last_three)): #ver se e outlier
         colecao= bd["temp_outliers"]
     else: #cc e um valor valido
         registo["Sent"]= False
         colecao= bd["temps_received"]
 
+        last_three.append(registo["Temperature"])
+        if(len(last_three) == 4):
+            del last_three[0]
+
     colecao.insert_one(registo)
 
 ##################Codigo Principal##################
 #cliente MySQL
-mysql_cliente= mysql.connector.connect(host="", user="", password="", database="")
+mysql_cliente= mysql.connector.connect(host="", user="", password="", database="maze")
 cursor= mysql_cliente.cursor()
 
 threshold_temp= cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao ==")
@@ -33,6 +37,7 @@ threshold_temp= cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE I
 mysql_cliente.close()
 
 #cliente Mongo
+last_three= []
 mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
 bd= mongo_cliente["SensorData"] #nome da base de dados
 

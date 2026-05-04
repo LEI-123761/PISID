@@ -119,19 +119,33 @@ def move_anomalo(registo, player, num_marsamis, origem_anterior, num_salas):
 
     return False
 
-def temp_outlier(temp_atual, threshold):
-    media= 0 #calcular media dos 3 anteriores
-    variacao= (temp_atual - media)
+def temp_outlier(temp_atual, threshold, last_three):
+    if(len(last_three) == 3):
+        media= (last_three[0]+last_three[1]+last_three[2])/3
+    elif(len(last_three) == 2): #se for o 3o a ser inserido
+        media= (last_three[0]+last_three[1])/2
+    elif(len(last_three) == 1): #se for o 2o a ser inserido
+        media= last_three[0]
+    else: #se for o 1o a ser inserido
+        return True
 
+    variacao= (temp_atual - media)
     if(variacao < threshold): #comparar com threshold
         return False
     else:
         return True
 
-def sound_outlier(sound_atual, threshold):
-    media= 0 #calcular media
-    variacao= (sound_atual - media)
+def sound_outlier(sound_atual, threshold, last_three):
+    if(len(last_three) == 3):
+        media= (last_three[0]+last_three[1]+last_three[2])/3
+    elif(len(last_three) == 2): #se for o 3o a ser inserido
+        media= (last_three[0]+last_three[1])/2
+    elif(len(last_three) == 1): #se for o 2o a ser inserido
+        media= last_three[0]
+    else: #se for o 1o a ser inserido
+        return True
 
+    variacao= (sound_atual - media)
     if(variacao < threshold): #comparar com threshold
         return False
     else:
