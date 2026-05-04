@@ -250,22 +250,22 @@ DELIMITER ;
 --
 
 -- Permissões som script
-CREATE USER IF NOT EXISTS 'som_user'@'%' IDENTIFIED BY 'som_password';
-GRANT ALL PRIVILEGES ON maze.Som TO 'som_user'@'%';
-GRANT Select ON maze.Simulacao TO 'som_user'@'%';
+CREATE USER IF NOT EXISTS 'mig_som'@'%' IDENTIFIED BY 'mig_som4';
+GRANT SELECT,INSERT ON maze.Som TO 'mig_som'@'%';
+GRANT SELECT ON maze.Simulacao TO 'mig_som'@'%';
 
 -- Permissões temperatura script
-CREATE USER IF NOT EXISTS 'temperatura_user'@'%' IDENTIFIED BY 'temperatura_password';
-GRANT ALL PRIVILEGES ON maze.Temperatura TO 'temperatura_user'@'%';
-GRANT Select ON maze.Simulacao TO 'temperatura_user'@'%';
+CREATE USER IF NOT EXISTS 'mig_temperatura'@'%' IDENTIFIED BY 'mig_temperatura4';
+GRANT SELECT, INSERT ON maze.Temperatura TO 'mig_temperatura'@'%';
+GRANT SELECT ON maze.Simulacao TO 'mig_temperatura'@'%';
 
 -- Permissões movimentos script
-CREATE USER IF NOT EXISTS 'movimentos_user'@'%' IDENTIFIED BY 'movimentos_password';
-GRANT ALL PRIVILEGES ON maze.MedicoesPassagens TO 'movimentos_user'@'%';
-GRANT Select ON maze.Simulacao TO 'movimentos_user'@'%';
+CREATE USER IF NOT EXISTS 'mig_movimentos'@'%' IDENTIFIED BY 'mig_movimentos4';
+GRANT SELECT,INSERT ON maze.MedicoesPassagens TO 'mig_movimentos'@'%';
+GRANT SELECT ON maze.Simulacao TO 'mig_movimentos'@'%';
 
 --
--- Valores iniciais
+-- Valores iniciais:
 --
 
 -- utilizador

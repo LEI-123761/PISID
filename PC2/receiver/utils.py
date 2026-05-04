@@ -1,14 +1,14 @@
 # Moves
-MOVES_USER= "movimentos_user"
-MOVES_PASSWORD="movimentos_password"
+MOVES_USER= "mig_movimentos"
+MOVES_PASSWORD="mig_movimentos4"
 
 # Temp 
-TEMPS_USER="temperatura_user"
-TEMPS_PASSWORD="temperatura_password"
+TEMPS_USER="mig_temperatura"
+TEMPS_PASSWORD="mig_temperatura4"
 
 # Sound 
-SOUNDS_USER="som_user"
-SOUNDS_PASSWORD="som_password"
+SOUNDS_USER="mig_som"
+SOUNDS_PASSWORD="mig_som4"
 
 # Mysql DB
 HOST="mysql"
