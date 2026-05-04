@@ -12,41 +12,47 @@
 import paho.mqtt.client as mqtt
 import mysql.connector
 import json
+import utils
+from connection import connect_to_mysql
 
 #configuração
-MQTT_BROKER    = "broker.hivemq.com"
-MQTT_PORT      = 1883
 MQTT_TOPIC_SUB = "pisid_mazesound_4"
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 CLIENT_ID      = "pisid_receiver_ruido"
 
 MYSQL_CONFIG = {
-    "host":     "localhost",
-    "port":     13306,
-    "user":     "root",
-    "password": "root",
-    "database": "maze"
+    "host":     utils.HOST,
+    "user":     utils.SOUNDS_USER,
+    "password": utils.SOUNDS_PASSWORD,
+    "database": utils.DATABASE 
 }
 
 #ligação MySQL persistente
-mysqlclient = mysql.connector.connect(**MYSQL_CONFIG)
-mycursor    = mysqlclient.cursor()
-print("[SOM] Ligado ao MySQL")
+tentativas = utils.MYSQL_ATTEMPTS
+mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
 
-# obtém o ID da simulação activa
-mycursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
-row = mycursor.fetchone()
-ID_SIMULACAO = row[0] if row else None
+if mysqlclient:
+    mycursor    = mysqlclient.cursor()
+    print("[SOM] Ligado ao MySQL")
 
-if ID_SIMULACAO is None:
-    print("[SOM] Aviso: sem simulação activa no arranque")
+    # obtém o ID da simulação activa
+    ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
+
+    if ID_SIMULACAO is None:
+        print("[SOM] Aviso: sem simulação activa no arranque")
+else: 
+    print("[SOM] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
-            print("[SOM] Sem simulação activa, a ignorar mensagem")
-            return
+            # Tenta obter id_simulacao novamente
+            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
+            if ID_SIMULACAO is None:
+                print("[SOM] Sem simulação activa, a ignorar mensagem")
+                return
 
         data = json.loads(msg.payload.decode())
         print(f"[SOM] Recebido: {data}")
@@ -75,19 +81,19 @@ def on_message(client, userdata, msg):
         mysqlclient.rollback()
 
 #callback ligação
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print(f"[SOM] Ligado ao broker | session present: {flags['session present']}")
+def on_connect(client, userdata, flags, reason_code, properties=None):
+    if reason_code == 0:
+        print(f"[SOM] Ligado ao broker: {client._host}")
         # QoS 1 para ruído — confirmação sem overhead do QoS 2
         client.subscribe(MQTT_TOPIC_SUB, qos=1)
     else:
-        print(f"[SOM] Erro ao ligar, rc={rc}")
+        print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
 #cliente MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=False)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
+mqtt_client.connect(utils.MQTT_BROKER, utils.MQTT_PORT)
 
 print("[SOM] Receiver iniciado...")
 mqtt_client.loop_forever()

@@ -45,7 +45,7 @@ services:
       context: ..
       dockerfile: PC2/Dockerfile
     container_name: movements
-    command: python ./PC2/scripts/moves_to_sql.py
+    command: python ./PC2/receiver/receiver_movimentos.py
     depends_on:
       - mysql
     networks:
@@ -58,7 +58,7 @@ services:
       context: ..
       dockerfile: PC2/Dockerfile
     container_name: temperature
-    command: python ./PC2/scripts/temps_to_sql.py
+    command: python ./PC2/receiver/receiver_temperatura.py
     depends_on:
       - mysql
     networks:
@@ -71,7 +71,7 @@ services:
       context: ..
       dockerfile: PC2/Dockerfile
     container_name: sound
-    command: python ./PC2/scripts/sounds_to_sql.py
+    command: python ./PC2/receiver/receiver_ruido.py
     depends_on:
       - mysql
     networks:
