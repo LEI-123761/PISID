@@ -17,7 +17,7 @@ import utils
 from connection import connect_to_mysql
 
 #configuração
-MQTT_TOPIC_SUB = "pisid_mazemov_4"
+MQTT_TOPIC_SUB = "mazemov_4"
 # tópico onde publicamos confirmação após inserir no MySQL
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 CLIENT_ID      = "pisid_receiver_movimentos"
