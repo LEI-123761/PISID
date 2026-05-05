@@ -16,7 +16,7 @@ import utils
 from connection import connect_to_mysql
 
 #configuração
-MQTT_TOPIC_SUB = "pisid_mazetemp_4"
+MQTT_TOPIC_SUB = "mazetemp_4"
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 CLIENT_ID      = "pisid_receiver_temperatura"
 
@@ -24,7 +24,7 @@ MYSQL_CONFIG = {
     "host":     utils.HOST,
     "user":     utils.TEMPS_USER,
     "password": utils.TEMPS_PASSWORD,
-    "database": utils.DATABASE 
+    "database": utils.DATABASE
 }
 
 #ligação MySQL persistente
@@ -32,7 +32,7 @@ tentativas = utils.MYSQL_ATTEMPTS
 mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
 
 if mysqlclient:
-    mycursor    = mysqlclient.cursor()
+    mycursor= mysqlclient.cursor()
     print("[TEMP] Ligado ao MySQL")
 
     # obtém o ID da simulação activa
@@ -41,7 +41,7 @@ if mysqlclient:
     if ID_SIMULACAO is None:
         print("[TEMP] Aviso: sem simulação activa no arranque")
 
-else: 
+else:
     print("[TEMP] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
 
 #callback mensagem
