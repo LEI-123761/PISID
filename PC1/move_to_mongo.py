@@ -110,7 +110,7 @@ for j in num_marsamis:
 
 #cliente Mongo
 current_id= [1]
-mongo_cliente= MongoClient("30001:27017, 30002:27017, 30003:27017", replicaSet="rs0", readPreference="nearest")
+mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0")
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT

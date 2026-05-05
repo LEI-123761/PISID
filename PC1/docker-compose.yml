@@ -89,3 +89,13 @@ services:
           }
         '
       "
+
+  scripts:
+    image: python:3.11
+    container_name: scripts
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python test.py"
+    depends_on:
+      - mongo-setup
