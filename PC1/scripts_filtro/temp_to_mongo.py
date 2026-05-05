@@ -53,7 +53,7 @@ bd= mongo_cliente["SensorData"] #nome da base de dados
 mqtt_cliente= mqtt.Client()
 mqtt_cliente.on_message= receive_msg
 
-# mqtt_cliente.connect("www.hivemq.com", 1883)
-mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
+mqtt_cliente.connect("broker.hivemq.com", 1883)
+# mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazetemp_4")
 mqtt_cliente.loop_forever()
