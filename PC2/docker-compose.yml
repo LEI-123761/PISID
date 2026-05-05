@@ -83,6 +83,19 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
 
+  feedback:
+    build:
+      context: ..
+      dockerfile: PC2/Dockerfile
+    container_name: feedback
+    command: python ./PC2/receiver/feedback.py
+    depends_on:
+      - mysql
+    networks:
+      - pc2-network
+    environment:
+      - PYTHONUNBUFFERED=1
+
 volumes:
   mysql_data:
 

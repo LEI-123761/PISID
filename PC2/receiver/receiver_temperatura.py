@@ -46,6 +46,7 @@ else:
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -56,6 +57,7 @@ def on_message(client, userdata, msg):
                 return
 
         data = json.loads(msg.payload.decode())
+        print(data)
         print(f"[TEMP] Recebido: {data}")
 
         # insere a leitura de temperatura na tabela Temperatura
@@ -70,11 +72,11 @@ def on_message(client, userdata, msg):
         # feedback publicado após commit confirmado
         feedback = {
             "collection": "temps_received",
-            "id_seq":     data["id_seq"],
+            "Id":     data["Id"],
             "status":     "ok"
         }
         client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[TEMP] Feedback enviado id_seq={data['id_seq']}")
+        print(f"[TEMP] Feedback enviado Id={data['Id']}")
 
     except Exception as e:
         print(f"[TEMP] Erro: {e}")
@@ -85,6 +87,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
         print(f"[TEMP] Ligado ao broker: {client._host}")
         client.subscribe(MQTT_TOPIC_SUB, qos=1)
+        print("Ligado ao topic... ", MQTT_TOPIC_SUB)
     else:
         print(f"[TEMP] Erro ao ligar, rc={reason_code}")
 

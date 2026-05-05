@@ -14,7 +14,7 @@ from pymongo import MongoClient
 import json
 
 #configuração
-MONGO_URI   = "mongodb://localhost:27017/"
+MONGO_URI   = "mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0"
 DB_NAME     = "SensorData"
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT   = 1883
@@ -40,19 +40,19 @@ def on_message(client, userdata, msg):
         # nome da coleção MongoDB a actualizar
         collection_name = data.get("collection")
         # id_seq do documento a marcar como enviado
-        id_seq = data.get("id_seq")
+        id_seq = data.get("Id")
 
         # marca o documento como Sent=True usando o id_seq incremental
         result = db[collection_name].update_one(
-            {"id_seq": id_seq},
+            {"Id": id_seq},
             {"$set": {"Sent": True}}
         )
 
         if result.modified_count == 1:
-            print(f"[FB] Sent=True em {collection_name} id_seq={id_seq}")
+            print(f"[FB] Sent=True em {collection_name} Id={id_seq}")
         else:
             # pode acontecer se o documento foi apagado entretanto
-            print(f"[FB] Não encontrado: {collection_name} id_seq={id_seq}")
+            print(f"[FB] Não encontrado: {collection_name} Id={id_seq}")
 
     except Exception as e:
         print(f"[FB] Erro: {e}")

@@ -117,6 +117,8 @@ services:
     command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_temperatura.py"
     depends_on:
       - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
 
   publisher_moves:
     image: python:3.11
