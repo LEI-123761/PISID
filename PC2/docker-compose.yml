@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile-web
     container_name: web
     volumes:
-      - ./scripts/php:/var/www/html
+      - ./scripts/php:/var/www/html/maze_app_php
     ports:
       - "8080:80"
     depends_on:
