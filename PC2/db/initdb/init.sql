@@ -495,7 +495,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE Remover_utilizador_admin()
+CREATE PROCEDURE Remover_utilizador()
 BEGIN
     DECLARE v_email VARCHAR(255);
     DECLARE v_idUtilizador INT;
@@ -530,7 +530,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE Remover_utilizador(
+CREATE PROCEDURE Remover_utilizador_admin(
     IN email_a_remover VARCHAR(255)
 )
 BEGIN
