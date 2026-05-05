@@ -363,7 +363,7 @@ BEGIN
     INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa)
     VALUES (p_email, p_nome, p_telemovel, p_tipo, p_dataNascimento, p_equipa);
 
-    -- Criar utilizador MySQL com host = %
+    -- Criar utilizador MySQL
     SET @sql = CONCAT(
         'CREATE USER ''', p_email, '''@''%'' IDENTIFIED BY ''', v_username, ''''
     );
@@ -371,11 +371,19 @@ BEGIN
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
 
-    -- ADMIN: permissões totais
+    -- Atribuir ROLE consoante o tipo
     IF p_tipo = 'admin' THEN
 
         SET @sql = CONCAT(
-            'GRANT ALL PRIVILEGES ON maze.* TO ''', p_email, '''@''%'''
+            'GRANT ''admin'' TO ''', p_email, '''@''%'''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        -- definir como role ativo por defeito
+        SET @sql = CONCAT(
+            'SET DEFAULT ROLE ''admin'' TO ''', p_email, '''@''%'''
         );
         PREPARE stmt FROM @sql;
         EXECUTE stmt;
@@ -383,87 +391,25 @@ BEGIN
 
     ELSE
 
-        -- JOGADOR: permissões limitadas
         SET @sql = CONCAT(
-            'GRANT SELECT, UPDATE ON maze.Utilizador TO ''', p_email, '''@''%'''
+            'GRANT ''jogador'' TO ''', p_email, '''@''%'''
         );
         PREPARE stmt FROM @sql;
         EXECUTE stmt;
         DEALLOCATE PREPARE stmt;
 
+        -- definir como role ativo por defeito
         SET @sql = CONCAT(
-            'GRANT SELECT, INSERT, UPDATE ON maze.Simulacao TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT SELECT ON maze.MedicoesPassagens TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT SELECT ON maze.Som TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT SELECT ON maze.Temperatura TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT SELECT ON maze.OcupacaoLabirinto TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT SELECT ON maze.Mensagens TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        -- Permissões para executar procedures
-        SET @sql = CONCAT(
-            'GRANT EXECUTE ON PROCEDURE maze.Remover_utilizador TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT EXECUTE ON PROCEDURE maze.Alterar_utilizador TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT EXECUTE ON PROCEDURE maze.Criar_jogo TO ''', p_email, '''@''%'''
-        );
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SET @sql = CONCAT(
-            'GRANT EXECUTE ON PROCEDURE maze.Alterar_jogo TO ''', p_email, '''@''%'''
+            'SET DEFAULT ROLE ''jogador'' TO ''', p_email, '''@''%'''
         );
         PREPARE stmt FROM @sql;
         EXECUTE stmt;
         DEALLOCATE PREPARE stmt;
 
     END IF;
+
 END$$
+
 
 DELIMITER ;
 
@@ -495,7 +441,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE Remover_utilizador_admin()
+CREATE PROCEDURE Remover_utilizador()
 BEGIN
     DECLARE v_email VARCHAR(255);
     DECLARE v_idUtilizador INT;
@@ -530,7 +476,7 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE PROCEDURE Remover_utilizador(
+CREATE PROCEDURE Remover_utilizador_admin(
     IN email_a_remover VARCHAR(255)
 )
 BEGIN
@@ -582,3 +528,18 @@ BEGIN
 END$$
 
 DELIMITER ;
+-- ADMIN (tudo na BD)
+GRANT ALL PRIVILEGES ON maze.* TO 'admin';
+
+-- EXECUTE correto
+GRANT EXECUTE ON maze.* TO 'admin';
+
+
+-- JOGADOR (leitura global)
+GRANT SELECT ON maze.* TO 'jogador';
+
+-- EXECUTE por procedure (um a um!)
+GRANT EXECUTE ON PROCEDURE maze.Alterar_utilizador TO 'jogador';
+GRANT EXECUTE ON PROCEDURE maze.Remover_utilizador TO 'jogador';
+GRANT EXECUTE ON PROCEDURE maze.Criar_jogo TO 'jogador';
+GRANT EXECUTE ON PROCEDURE maze.Alterar_jogo TO 'jogador';
