@@ -42,7 +42,7 @@ if ($stmt) {
 
     if ($user) {
         $response['success'] = true;
-        $response['IDGrupo'] = $user['equipa'];
+        $response['IDGrupo'] = $user['Equipa'];
         $response['message'] = 'Login bem-sucedido.';
     } else {
         $response['message'] = 'Utilizador não encontrado.';

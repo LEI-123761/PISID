@@ -582,3 +582,6 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+
+CALL Cria_utilizador('iappb@iscte-iul.pt', 'Iris', '123456789', 'admin', '1999-08-06', '4');
