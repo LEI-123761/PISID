@@ -31,7 +31,7 @@ if ($conn->connect_error) {
 }
 
 // 3. Consulta (Usando MySQLi preparada para evitar SQL Injection)
-$sql = "SELECT equipa FROM utilizador WHERE email = ?";
+$sql = "SELECT Equipa FROM Utilizador WHERE Email = ?";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {

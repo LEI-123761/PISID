@@ -32,7 +32,7 @@ if ($conn->connect_error) {
 }
 
 // 3. Consulta
-$sql = "SELECT id, tipoalerta, hora, msg, leitura, sensor FROM mensagens ORDER BY id DESC";
+$sql = "SELECT ID, TipoAlerta, Hora, Leitura, Sensor FROM Mensagens ORDER BY ID DESC";
 $result = $conn->query($sql);
 
 if ($result) {

@@ -31,7 +31,7 @@ if ($conn->connect_error) {
 }
 
 // Query para obter o valor máximo de som
-$sql = "SELECT maximo FROM configsound LIMIT 1";
+$sql = "SELECT SomMax FROM Parametros LIMIT 1";
 $result = $conn->query($sql);
 
 if ($result) {
