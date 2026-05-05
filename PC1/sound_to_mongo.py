@@ -10,7 +10,7 @@ def receive_msg(client, userdata, message):
 
     player= int((msg_sections[0].split(":"))[1])
     registo= {}
-    registo["Hour"]= ((msg_sections[1].split("\""))[1])
+    registo["Hour"]= ((msg_sections[1][1:-1].split("\': \'"))[1])
     registo["Sound"]= float((msg_sections[2].split(":"))[1])
 
     is_anomalo, razao= v.sound_anomalo(registo, player)
@@ -33,13 +33,14 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL
-mysql_cliente= mysql.connector.connect(host="mysql", user="mig_som", password="mig_som4", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
-cursor= mysql_cliente.cursor()
+# mysql_cliente= mysql.connector.connect(host="mysql", user="mig_som", password="mig_som4", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
+# cursor= mysql_cliente.cursor()
+#
+# id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
+# threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ${id_sim}")
 
-id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
-threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ${id_sim}")
-
-mysql_cliente.close()
+# mysql_cliente.close()
+threshold_som= 5
 
 #cliente Mongo
 last_three= []
@@ -48,9 +49,10 @@ mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?re
 bd= mongo_cliente["SensorData"]
 
 #cliente MQTT
-mqtt_cliente= mqtt.Client("sound_mongo")
+mqtt_cliente= mqtt.Client()
 mqtt_cliente.on_message= receive_msg
 
-mqtt_cliente.connect("www.hivemq.com", 1883)
+# mqtt_cliente.connect("www.hivemq.com", 1883)
+mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazesound_4")
 mqtt_cliente.loop_forever()

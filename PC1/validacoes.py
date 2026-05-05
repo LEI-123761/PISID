@@ -106,7 +106,7 @@ def move_anomalo(registo, player, num_marsamis, origem_anterior, num_salas):
         return True, "Marsami Invalido"
 
     origem= registo["RoomOrigin"]
-    if(origem != origem_anterior[marsami_num-1]): #sala de origem certa?
+    if(origem != origem_anterior): #sala de origem certa?
         return True, "Room Origin Invalido"
 
     destino= registo["RoomDestiny"]
@@ -129,7 +129,7 @@ def temp_outlier(temp_atual, threshold, last_three):
     else: #se for o 1o a ser inserido
         return False
 
-    variacao= (temp_atual - media)
+    variacao= abs(temp_atual - media)
     if(variacao < threshold): #comparar com threshold
         return False
     else:
@@ -145,7 +145,7 @@ def sound_outlier(sound_atual, threshold, last_three):
     else: #se for o 1o a ser inserido
         return False
 
-    variacao= (sound_atual - media)
+    variacao= abs(sound_atual - media)
     if(variacao < threshold): #comparar com threshold
         return False
     else:

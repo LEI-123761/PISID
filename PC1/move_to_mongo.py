@@ -40,7 +40,7 @@ def receive_msg(client, userdata, message):
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[player-1]), num_salas
+    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[player-1], num_salas)
     if(is_anomalo): #ver se e anomolo
         registo["Motivo"]= razao
         colecao= bd["move_errors"]
@@ -61,51 +61,61 @@ def receive_msg(client, userdata, message):
     destiny_room_index= registo["RoomDestiny"]-1
 
     destino= contador_marsamis[destiny_room_index]
+    destino_list= list(destino)
     if(registo["Marsami"]%2 != 0): #se marsami for odd
         if(origin_room_index != -1): #se sala nao for 0
             origem= contador_marsamis[origin_room_index]
-            origem[0]-= 1
+            origem_list= list(origem)
+            origem_list[0]-= 1
+            origem= tuple(origem_list)
 
             if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3)):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
 
-        destino[0]+= 1
+        destino_list[0]+= 1
+        destino= tuple(destino_list)
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
     else:
         if(origin_room_index != -1):
             origem= contador_marsamis[origin_room_index]
-            origem[1]-= 1
+            origem_list= list(origem)
+            origem_list[1]-= 1
+            origem= tuple(origem_list)
 
             if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3)):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
             (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
 
-        destino[1]+= 1
+        destino_list[1]+= 1
+        destino= tuple(destino_list)
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
 
 ##################Codigo Principal##################
 #cliente MySQL (Cloud)
-mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
-cursor= mysql_cliente.cursor()
+# mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
+# cursor= mysql_cliente.cursor()
+#
+# num_salas= cursor.execute("SELECT numberrooms FROM SetupMaze")
+# num_marsamis= cursor.execute("SELECT numbermarsamis FROM SetupMaze")
+#
+# mysql_cliente.close()
 
-num_salas= cursor.execute("SELECT numberrooms FROM SetupMaze")
-num_marsamis= cursor.execute("SELECT numbermarsamis FROM SetupMaze")
-
-mysql_cliente.close()
+num_salas= 20
+num_marsamis= 20
 
 contador_marsamis= []
 tentativa_gatilho= []
-for i in num_salas:
+for i in range(0, num_salas):
     contador_marsamis.append((0, 0)) #((odd, even), ...)
     tentativa_gatilho.append(0)
 
 last_room= []
-for j in num_marsamis:
+for j in range(0, num_marsamis):
     last_room.append(0)
 
 #cliente Mongo
@@ -114,9 +124,10 @@ mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?re
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT
-mqtt_cliente= mqtt.Client("moves_mongo")
+mqtt_cliente= mqtt.Client()
 mqtt_cliente.on_message= receive_msg
 
-mqtt_cliente.connect("www.hivemq.com", 1883)
+# mqtt_cliente.connect("www.hivemq.com", 1883)
+mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazemov_4")
 mqtt_cliente.loop_forever()

@@ -90,12 +90,42 @@ services:
         '
       "
 
-  scripts:
+#  scripts:
+#    image: python:3.11
+#    container_name: scripts
+#    working_dir: /PISID_Project/PC1
+#    volumes:
+#      - .:/PISID_Project/PC1
+#    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python sound_to_mongo.py && python temp_to_mongo.py"
+#    depends_on:
+#      - mongo-setup
+
+  script_som:
     image: python:3.11
-    container_name: scripts
+    container_name: script_som
     working_dir: /PISID_Project/PC1
     volumes:
       - .:/PISID_Project/PC1
-    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python test.py"
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python sound_to_mongo.py && python temp_to_mongo.py"
+    depends_on:
+      - mongo-setup
+
+  script_temp:
+    image: python:3.11
+    container_name: script_temp
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python temp_to_mongo.py"
+    depends_on:
+      - mongo-setup
+
+  script_moves:
+    image: python:3.11
+    container_name: script_moves
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python move_to_mongo.py"
     depends_on:
       - mongo-setup

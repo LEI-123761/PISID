@@ -10,7 +10,7 @@ def receive_msg(client, userdata, message):
 
     player= int((msg_sections[0].split(":"))[1])
     registo= {}
-    registo["Hour"]= ((msg_sections[1].split("\""))[1])
+    registo["Hour"]= ((msg_sections[1][1:-1].split("\': \'"))[1])
     registo["Temperature"]= float((msg_sections[2].split(":"))[1])
 
     is_anomalo, razao= v.temp_anomalo(registo, player)
@@ -33,13 +33,15 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL
-mysql_cliente= mysql.connector.connect(host="mysql", user="mig_temperatura", password="mig_temperatura4", database="maze")
-cursor= mysql_cliente.cursor()
+# mysql_cliente= mysql.connector.connect(host="mysql", user="mig_temperatura", password="mig_temperatura4", database="maze")
+# cursor= mysql_cliente.cursor()
+#
+# id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
+# threshold_temp= cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao == ${id_sim}")
+#
+# mysql_cliente.close()
 
-id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
-threshold_temp= cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao == ${id_sim}")
-
-mysql_cliente.close()
+threshold_temp= 5
 
 #cliente Mongo
 last_three= []
@@ -48,9 +50,10 @@ mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?re
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT
-mqtt_cliente= mqtt.Client("temp_mongo")
+mqtt_cliente= mqtt.Client()
 mqtt_cliente.on_message= receive_msg
 
-mqtt_cliente.connect("www.hivemq.com", 1883)
+# mqtt_cliente.connect("www.hivemq.com", 1883)
+mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazetemp_4")
 mqtt_cliente.loop_forever()
