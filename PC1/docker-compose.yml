@@ -8,11 +8,6 @@ services:
     ports:
       - "30001:27017"
     command: mongod --replSet rs0 --bind_ip_all
-#    networks:
-#      - mongo-network
-#    volumes:
-#      - mongo1_data:/data/db
-#      - ./init-scripts:/docker-entrypoint-initdb.d:ro
 
   mongo2:
     image: mongo:latest
@@ -21,10 +16,6 @@ services:
     ports:
       - "30002:27017"
     command: mongod --replSet rs0 --bind_ip_all
-#    networks:
-#      - mongo-network
-#    volumes:
-#      - mongo2_data:/data/db
 
   mongo3:
     image: mongo:latest
@@ -33,19 +24,6 @@ services:
     ports:
       - "30003:27017"
     command: mongod --replSet rs0 --bind_ip_all
-#    networks:
-#      - mongo-network
-#    volumes:
-#      - mongo3_data:/data/db
-
-#volumes:
-#  mongo1_data:
-#  mongo2_data:
-#  mongo3_data:
-#
-#networks:
-#  mongo-network:
-#    driver: bridge
 
   mongo-setup:
     image: mongo:latest
@@ -90,23 +68,13 @@ services:
         '
       "
 
-#  scripts:
-#    image: python:3.11
-#    container_name: scripts
-#    working_dir: /PISID_Project/PC1
-#    volumes:
-#      - .:/PISID_Project/PC1
-#    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python sound_to_mongo.py && python temp_to_mongo.py"
-#    depends_on:
-#      - mongo-setup
-
   script_som:
     image: python:3.11
     container_name: script_som
     working_dir: /PISID_Project/PC1
     volumes:
       - .:/PISID_Project/PC1
-    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python sound_to_mongo.py && python temp_to_mongo.py"
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python scripts_filtro/sound_to_mongo.py"
     depends_on:
       - mongo-setup
 
@@ -116,7 +84,7 @@ services:
     working_dir: /PISID_Project/PC1
     volumes:
       - .:/PISID_Project/PC1
-    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python temp_to_mongo.py"
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python scripts_filtro/temp_to_mongo.py"
     depends_on:
       - mongo-setup
 
@@ -126,6 +94,36 @@ services:
     working_dir: /PISID_Project/PC1
     volumes:
       - .:/PISID_Project/PC1
-    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python move_to_mongo.py"
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python scripts_filtro/move_to_mongo.py"
+    depends_on:
+      - mongo-setup
+
+  publisher_som:
+    image: python:3.11
+    container_name: publisher_som
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_ruido.py"
+    depends_on:
+      - mongo-setup
+
+  publisher_temp:
+    image: python:3.11
+    container_name: publisher_temp
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_temperatura.py"
+    depends_on:
+      - mongo-setup
+
+  publisher_moves:
+    image: python:3.11
+    container_name: publisher_moves
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_movimentos.py"
     depends_on:
       - mongo-setup

@@ -19,7 +19,7 @@ DB_NAME     = "SensorData"
 COLLECTION  = "sounds_received"
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT   = 1883
-MQTT_TOPIC  = "pisid_mazesound_4"
+MQTT_TOPIC  = "mazesound_4"
 CLIENT_ID   = "pisid_publisher_ruido"
 
 #callbacks MQTT

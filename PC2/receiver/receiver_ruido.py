@@ -16,7 +16,7 @@ import utils
 from connection import connect_to_mysql
 
 #configuração
-MQTT_TOPIC_SUB = "pisid_mazesound_4"
+MQTT_TOPIC_SUB = "mazesound_4"
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 CLIENT_ID      = "pisid_receiver_ruido"
 

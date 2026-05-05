@@ -7,19 +7,18 @@
 # O receiver_temperatura.py no PC2 recebe essas mensagens
 # e insere-as no MySQL.
 
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
 import time
 
 #configuração
-MONGO_URI   = "mongodb://localhost:27017/"
+MONGO_URI   = "mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0/"
 DB_NAME     = "SensorData"
 COLLECTION  = "temps_received"
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT   = 1883
-MQTT_TOPIC  = "pisid_mazetemp_4"
+MQTT_TOPIC  = "mazetemp_4"
 CLIENT_ID   = "pisid_publisher_temperatura"
 
 #callbacks MQTT
@@ -34,8 +33,7 @@ def on_publish(client, userdata, mid):
 
 #ligação MongoDB
 mongo_client = MongoClient(MONGO_URI)
-collection   = mongo_client[DB_NAME][COLLECTION]
-
+collection = mongo_client[DB_NAME][COLLECTION]
 
 #ligação MQTT
 mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
@@ -43,25 +41,24 @@ mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
 #loop para publicar no MQTT
-mqtt_client.loop_start()
+# mqtt_client.loop_start()
 
 print("[TEMP] Publisher iniciado...")
 
 #loop principal para buscar coisas no mongo
 while True:
     try:
-        docs = list(collection.find({"Sent": False}).sort("id_seq", 1))
+        docs = list(collection.find({"Sent": False}).sort("Id", 1))
 
         for doc in docs:
             payload = {
-                "id_seq":      doc["id_seq"],
-                "Player":      doc.get("Player"),
-                "Hour":        doc.get("Hour"),
-                "Temperature": doc.get("Temperature"),
+                "Id":doc.get("Id"),
+                "Hour":doc.get("Hour"),
+                "Temperature":doc.get("Temperature"),
             }
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
             result.wait_for_publish()
-            print(f"[TEMP] Enviado id_seq={payload['id_seq']}")
+            print(f"[TEMP] Enviado id={payload['Id']}")
 
     except Exception as e:
         print(f"[TEMP] Erro: {e}")

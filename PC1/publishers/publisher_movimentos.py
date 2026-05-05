@@ -18,7 +18,7 @@ DB_NAME     = "SensorData"
 COLLECTION  = "moves_received"
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT   = 1883
-MQTT_TOPIC  = "pisid_mazemov_4"
+MQTT_TOPIC  = "mazemov_4"
 CLIENT_ID   = "pisid_publisher_movimentos"
 
 # chamada automatica quando se liga ao broker
