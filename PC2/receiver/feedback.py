@@ -8,7 +8,6 @@
 # Este script recebe essa confirmação e marca o documento
 # original no MongoDB como Sent=True, fechando o ciclo.
 
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
@@ -25,7 +24,6 @@ CLIENT_ID   = "pisid_feedback"
 #ligação MongoDB
 mongo_client = MongoClient(MONGO_URI)
 db = mongo_client[DB_NAME]
-
 
 # chamada automaticamente quando chega uma confirmação de um receiver
 def on_message(client, userdata, msg):
