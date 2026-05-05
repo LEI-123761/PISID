@@ -5,56 +5,127 @@ services:
     image: mongo:latest
     container_name: mongo1
     restart: always
-    command:
-      - mongod
-      - --replSet
-      - rs0
-      - --bind_ip_all
     ports:
       - "30001:27017"
-    networks:
-      - mongo-network
-    volumes:
-      - mongo1_data:/data/db
-      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    command: mongod --replSet rs0 --bind_ip_all
+#    networks:
+#      - mongo-network
+#    volumes:
+#      - mongo1_data:/data/db
+#      - ./init-scripts:/docker-entrypoint-initdb.d:ro
 
   mongo2:
     image: mongo:latest
     container_name: mongo2
     restart: always
-    command:
-      - mongod
-      - --replSet
-      - rs0
-      - --bind_ip_all
     ports:
       - "30002:27017"
-    networks:
-      - mongo-network
-    volumes:
-      - mongo2_data:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
+#    networks:
+#      - mongo-network
+#    volumes:
+#      - mongo2_data:/data/db
 
   mongo3:
     image: mongo:latest
     container_name: mongo3
     restart: always
-    command:
-      - mongod
-      - --replSet
-      - rs0
-      - --bind_ip_all
     ports:
       - "30003:27017"
-    networks:
-      - mongo-network
+    command: mongod --replSet rs0 --bind_ip_all
+#    networks:
+#      - mongo-network
+#    volumes:
+#      - mongo3_data:/data/db
+
+#volumes:
+#  mongo1_data:
+#  mongo2_data:
+#  mongo3_data:
+#
+#networks:
+#  mongo-network:
+#    driver: bridge
+
+  mongo-setup:
+    image: mongo:latest
+    container_name: mongo-setup
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+    command: >
+      bash -c "
+        echo 'Aguardando MongoDBs...' &&
+        sleep 20 &&
+        echo 'Configurando replica set com prioridades...' &&
+        mongosh --host mongo1:27017 --eval '
+          try {
+            rs.initiate({
+              _id: \"rs0\",
+              members: [
+                {_id: 0, host: \"mongo1:27017\", priority: 2},
+                {_id: 1, host: \"mongo2:27017\", priority: 1},
+                {_id: 2, host: \"mongo3:27017\", priority: 1}
+              ]
+            });
+            print(\"Replica set iniciado!\");
+      
+            // Aguarda eleição
+            sleep(5000);
+      
+            // Verifica
+            print(\"Status após configuração:\");
+            rs.status().members.forEach(m => print(\"  \" + m.name + \" -> \" + m.stateStr));
+      
+          } catch(e) {
+            if (e.codeName === \"AlreadyInitialized\") {
+              print(\"ℹReplica set já estava configurado\");
+              print(\"Status atual:\");
+              rs.status().members.forEach(m => print(\"  \" + m.name + \" -> \" + m.stateStr));
+            } else {
+              print(\"Erro: \" + e.message);
+            }
+          }
+        '
+      "
+
+#  scripts:
+#    image: python:3.11
+#    container_name: scripts
+#    working_dir: /PISID_Project/PC1
+#    volumes:
+#      - .:/PISID_Project/PC1
+#    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python sound_to_mongo.py && python temp_to_mongo.py"
+#    depends_on:
+#      - mongo-setup
+
+  script_som:
+    image: python:3.11
+    container_name: script_som
+    working_dir: /PISID_Project/PC1
     volumes:
-      - mongo3_data:/data/db
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python sound_to_mongo.py && python temp_to_mongo.py"
+    depends_on:
+      - mongo-setup
 
-volumes:
-  mongo1_data:
-  mongo2_data:
-  mongo3_data:
+  script_temp:
+    image: python:3.11
+    container_name: script_temp
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python temp_to_mongo.py"
+    depends_on:
+      - mongo-setup
 
-networks:
-  mongo-network:
-    driver: bridge
+  script_moves:
+    image: python:3.11
+    container_name: script_moves
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python move_to_mongo.py"
+    depends_on:
+      - mongo-setup

@@ -1,31 +1,58 @@
+import mysql.connector
+from pymongo import MongoClient
 import paho.mqtt.client as mqtt
-import pymongo
 import validacoes as v
 
 def receive_msg(client, userdata, message):
-    msg= message.payload
-    registo= {"Hour": msg["Hour"], "Sound": msg["Sound"]}
+    #set up registo
+    msg= message.payload.decode("utf-8")
+    msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
 
-    if(v.sound_anomalo()): #ver se e anomolo
-        colecao= bd["sensor_errors"]
-    elif(v.sound_outlier()): #ver se e outlier
-        colecao= bd["outliers"]
+    player= int((msg_sections[0].split(":"))[1])
+    registo= {}
+    registo["Hour"]= ((msg_sections[1][1:-1].split("\': \'"))[1])
+    registo["Sound"]= float((msg_sections[2].split(":"))[1])
+
+    is_anomalo, razao= v.sound_anomalo(registo, player)
+    if(is_anomalo): #ver se e anomolo
+        registo["Motivo"]= razao
+        colecao= bd["sound_errors"]
+    elif(v.sound_outlier(registo["Sound"], threshold_som, last_three)): #ver se e outlier
+        colecao= bd["sound_outliers"]
     else: #cc e um valor valido
+        registo["Id"]= current_id[0]
         registo["Sent"]= False
         colecao= bd["sounds_received"]
 
+        last_three.append(registo["Sound"])
+        if(len(last_three) == 4):
+            del last_three[0]
+
     colecao.insert_one(registo)
+    current_id[0]+= 1
 
 ##################Codigo Principal##################
+#cliente MySQL
+# mysql_cliente= mysql.connector.connect(host="mysql", user="mig_som", password="mig_som4", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
+# cursor= mysql_cliente.cursor()
+#
+# id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
+# threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ${id_sim}")
+
+# mysql_cliente.close()
+threshold_som= 5
+
 #cliente Mongo
-mongo_cliente= pymongo.MongoClient("") #q endereco e q usamos?
-bd= mongo_cliente["SensorData"] #nome da base de dados
+last_three= []
+current_id= [1]
+mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0")
+bd= mongo_cliente["SensorData"]
 
 #cliente MQTT
-mqtt_cliente= mqtt.Client("sound_mongo")
+mqtt_cliente= mqtt.Client()
 mqtt_cliente.on_message= receive_msg
 
-mqtt_cliente.connect("www.hivemq.com", 1883)
-mqtt_cliente.loop_start()
-
+# mqtt_cliente.connect("www.hivemq.com", 1883)
+mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazesound_4")
+mqtt_cliente.loop_forever()
