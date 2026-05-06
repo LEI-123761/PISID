@@ -20,7 +20,12 @@ def is_leap(year):
 
 #timestamp format "2024-07-04 16:29:21.281898"
 def timestamp_impossivel(timestamp):
-    data, horas= timestamp.split(" ")
+    split_timestamp= timestamp.split(" ")
+    if(len(split_timestamp) != 2):
+        return True
+
+    data= split_timestamp[0]
+    horas= split_timestamp[1]
 
     #verificar data
     split_data= data.split("-")
@@ -49,7 +54,7 @@ def timestamp_impossivel(timestamp):
     hora= int(hora)
     min= int(min)
     seg= float(seg)
-    if(hora > 24 or hora < 0 or min > 59 or min < 0 or seg < 0 or seg > 59):
+    if(hora > 24 or hora < 0 or min > 59 or min < 0 or seg < 0 or seg >= 60):
         return True
 
     #se tudo valido

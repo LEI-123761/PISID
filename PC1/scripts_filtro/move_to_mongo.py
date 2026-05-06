@@ -31,6 +31,8 @@ def check_occupation_destiny(destiny_index):
 def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
+    print("RECEIVED: ", msg)
+    print("Num marsamis: ", num_marsamis, " Num salas: ", num_salas)
     msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
 
     player= int((msg_sections[0].split(":"))[1])
@@ -97,16 +99,21 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL (Cloud)
-# mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
-# cursor= mysql_cliente.cursor()
-#
-# num_salas= cursor.execute("SELECT numberrooms FROM SetupMaze")
-# num_marsamis= cursor.execute("SELECT numbermarsamis FROM SetupMaze")
-#
-# mysql_cliente.close()
+mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
+cursor= mysql_cliente.cursor()
 
-num_salas= 20
-num_marsamis= 20
+try:
+    cursor.execute("SELECT numberrooms FROM SetupMaze")
+    num_salas= cursor.fetchone()[0]
+    cursor.execute("SELECT numbermarsamis FROM SetupMaze")
+    num_marsamis= cursor.fetchone()[0]
+
+except Exception as e:
+    print("Exception ", e)
+    num_salas= 50
+    num_marsamis= 50
+
+mysql_cliente.close()
 
 contador_marsamis= []
 tentativa_gatilho= []

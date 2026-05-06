@@ -2,15 +2,18 @@ import mysql.connector
 from pymongo import MongoClient
 import paho.mqtt.client as mqtt
 import validacoes as v
+import time
 
 def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
+    print("RECEIVED ", msg)
+    print("threshold: ", threshold_som)
     msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
 
     player= int((msg_sections[0].split(":"))[1])
     registo= {}
-    registo["Hour"]= ((msg_sections[1][1:-1].split("\': \'"))[1])
+    registo["Hour"]= ((msg_sections[1][1:-1].split("\": \""))[1])
     registo["Sound"]= float((msg_sections[2].split(":"))[1])
 
     is_anomalo, razao= v.sound_anomalo(registo, player)
@@ -33,14 +36,19 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL
-# mysql_cliente= mysql.connector.connect(host="mysql", user="mig_som", password="mig_som4", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
-# cursor= mysql_cliente.cursor()
-#
-# id_sim= cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
-# threshold_som= cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ${id_sim}")
+mysql_cliente= mysql.connector.connect(host="mysql_connection", user="mig_som", password="mig_som4", database="maze") #preciso dos utlizadores para ligar me com as credenciais certas...
+cursor= mysql_cliente.cursor()
 
-# mysql_cliente.close()
-threshold_som= 5
+try:
+    cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
+    id_sim= cursor.fetchone()[0]
+    cursor.execute("SELECT LimiarSom FROM Parametros WHERE IDSimulacao == ${id_sim}")
+    threshold_som= cursor.fetchone()[0]
+except Exception as e:
+    print("Exception ", e)
+    threshold_som= 90 #isto para testes
+
+mysql_cliente.close()
 
 #cliente Mongo
 last_three= []
