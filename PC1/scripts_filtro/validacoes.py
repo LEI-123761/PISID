@@ -94,12 +94,12 @@ def sound_anomalo(registo, player):
 
     return False, ""
 
-def move_anomalo(registo, player, num_marsamis, origem_anterior, num_salas):
+def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas):
     if(player != 4):
         return True, "Jogador Invalido"
 
     for chave in registo: #algum campo inclui caraters estranhas?
-        if(campo_estranho(str(registo[chave]))):
+        if(campo_estranho(str(registo[chave]))): #tb verificar a chave#########################
             return True, "Carater Estranha Detetada"
 
     status= registo["Status"]
@@ -110,8 +110,10 @@ def move_anomalo(registo, player, num_marsamis, origem_anterior, num_salas):
     if(marsami_num < 1 or marsami_num > num_marsamis): #numero de marsami valido?
         return True, "Marsami Invalido"
 
+    # origem= int(registo["RoomOrigin"])
+    # destino_anterior= int(destino_anterior)
     origem= registo["RoomOrigin"]
-    if(origem != origem_anterior): #sala de origem certa?
+    if(origem != destino_anterior): #sala de origem certa?
         return True, "Room Origin Invalido"
 
     destino= registo["RoomDestiny"]

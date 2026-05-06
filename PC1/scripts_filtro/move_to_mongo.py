@@ -37,12 +37,13 @@ def receive_msg(client, userdata, message):
 
     player= int((msg_sections[0].split(":"))[1])
     registo= {}
-    registo["Marsami"]= int((msg_sections[1].split(":"))[1])
+    marsami= int((msg_sections[1].split(":"))[1])
+    registo["Marsami"]= marsami
     registo["RoomOrigin"]= int((msg_sections[2].split(":"))[1])
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[player-1], num_salas)
+    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[marsami-1], num_salas)
     if(is_anomalo): #ver se e anomolo
         registo["Motivo"]= razao
         colecao= bd["move_errors"]
@@ -57,7 +58,7 @@ def receive_msg(client, userdata, message):
     current_id[0]+= 1
 
     #atualizar contadores e tratamento de marsamis
-    last_room[player-1]= registo["RoomOrigin"]
+    last_room[marsami-1]= registo["RoomDestiny"]
 
     origin_room_index= registo["RoomOrigin"]-1 #-1 como index
     destiny_room_index= registo["RoomDestiny"]-1
