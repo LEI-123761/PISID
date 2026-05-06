@@ -2,6 +2,7 @@ import mysql.connector
 from pymongo import MongoClient
 import paho.mqtt.client as mqtt
 import validacoes as v
+import time
 
 def receive_msg(client, userdata, message):
     #set up registo
@@ -35,13 +36,21 @@ def receive_msg(client, userdata, message):
 
 ##################Codigo Principal##################
 #cliente MySQL
-mysql_cliente= mysql.connector.connect(host="mysql_connection", user="mig_temperatura", password="mig_temperatura4", database="maze")
+connecting= False
+while connecting == False:
+    try:
+        mysql_cliente= mysql.connector.connect(host="mysql_connection", user="mig_temperatura", password="mig_temperatura4", database="maze")
+        connecting= True
+    except:
+        print("Failed to connect, trying again...")
+        time.sleep(1)
+
 cursor= mysql_cliente.cursor()
 
 try:
     cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
     id_sim= cursor.fetchone()[0]
-    cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao == ${id_sim}")
+    cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao= "+str(id_sim))
     threshold_temp= cursor.fetchone()[0]
 except Exception as e:
     print("Exception ", e)

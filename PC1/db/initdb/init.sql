@@ -253,11 +253,13 @@ DELIMITER ;
 CREATE USER IF NOT EXISTS 'mig_som'@'%' IDENTIFIED BY 'mig_som4';
 GRANT SELECT,INSERT ON maze.Som TO 'mig_som'@'%';
 GRANT SELECT ON maze.Simulacao TO 'mig_som'@'%';
+GRANT SELECT ON maze.Parametros TO 'mig_som'@'%';
 
 -- Permissões temperatura script
 CREATE USER IF NOT EXISTS 'mig_temperatura'@'%' IDENTIFIED BY 'mig_temperatura4';
 GRANT SELECT, INSERT ON maze.Temperatura TO 'mig_temperatura'@'%';
 GRANT SELECT ON maze.Simulacao TO 'mig_temperatura'@'%';
+GRANT SELECT ON maze.Parametros TO 'mig_temperatura'@'%';
 
 -- Permissões movimentos script
 CREATE USER IF NOT EXISTS 'mig_movimentos'@'%' IDENTIFIED BY 'mig_movimentos4';
@@ -274,7 +276,7 @@ INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa) VA
 
 -- simulacao
 INSERT INTO Simulacao (Descricao, IDUtilizador, Status)
-VALUES ('Simulação de teste', 1, 'Criado');
+VALUES ('Simulação de teste', 1, 'Correr');
     -- nao tem ON DUPLICATE KEY UPDATE na Simulacao porque: não há nenhuma chave única que provoque “duplicate key”
 
 -- parametros

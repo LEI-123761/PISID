@@ -84,6 +84,19 @@ services:
     depends_on:
       - mongo-setup
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql_connection
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - mysql_connection
+
   script_som:
     image: python:3.11
     container_name: script_som
