@@ -37,7 +37,7 @@ mongo_client = MongoClient(MONGO_URI)
 collection   = mongo_client[DB_NAME][COLLECTION]
 
 #ligação MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)

@@ -42,12 +42,12 @@ def on_message(client, userdata, msg):
 
         # marca o documento como Sent=True usando o id_seq incremental
         result = db[collection_name].update_one(
-            {"Id": Id},
+            {"Id":  Id},
             {"$set": {"Sent": True}}
         )
 
         if result.modified_count == 1:
-            print(f"[FB] Sent=True em {collection_name} Id={Id}")
+            print(f"[FB] Sent=True em {collection_name} Id={ Id}")
         else:
             # pode acontecer se o documento foi apagado entretanto
             print(f"[FB] Não encontrado: {collection_name} Id={Id}")
@@ -64,7 +64,7 @@ def on_connect(client, userdata, flags, rc):
         print(f"[FB] Erro ao ligar, rc={rc}")
 
 #liente MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
