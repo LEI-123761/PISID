@@ -91,7 +91,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
         print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
 #cliente MQTT
-mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(utils.MQTT_BROKER, utils.MQTT_PORT)
