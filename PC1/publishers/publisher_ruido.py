@@ -29,7 +29,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     else:
         print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[SOM] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
@@ -41,7 +41,7 @@ mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
-# mqtt_client.loop_start()
+mqtt_client.loop_start()
 
 print("[SOM] Publisher iniciado...")
 

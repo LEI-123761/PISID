@@ -29,13 +29,12 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
         print(f"[MOV] Erro ao ligar, rc={reason_code}")
 
 # chamada automaticamente quando o broker confirma recepção
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[MOV] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
 mongo_client = MongoClient(MONGO_URI)
 collection   = mongo_client[DB_NAME][COLLECTION]
-
 
 #ligação MQTT
 # clean_session=False activa sessão persistente — o broker guarda
@@ -45,7 +44,7 @@ mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
 # loop_start() corre o MQTT em background para não bloquear o loop principal
-# mqtt_client.loop_start()
+mqtt_client.loop_start()
 
 print("[MOV] Publisher iniciado...")
 

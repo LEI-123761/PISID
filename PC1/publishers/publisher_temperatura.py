@@ -24,11 +24,11 @@ CLIENT_ID   = "pisid_publisher_temperatura"
 #callbacks MQTT
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[TEMP] Ligado ao broker | session present: {flags['session present']}")
+        print(f"[TEMP] Ligado ao broker | session present:  ") # {flags['session_present']}")
     else:
         print(f"[TEMP] Erro ao ligar, rc={reason_code}")
 
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[TEMP] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
@@ -41,7 +41,7 @@ mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
 #loop para publicar no MQTT
-# mqtt_client.loop_start()
+mqtt_client.loop_start()
 
 print("[TEMP] Publisher iniciado...")
 
@@ -57,8 +57,10 @@ while True:
                 "Temperature":doc.get("Temperature")
             }
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
-            # result.wait_for_publish()
-            print(f"[TEMP] Enviado id={payload['Id']}")
+            if result[0] == 0:
+                print(f"[TEMP] Enviado id={payload['Id']}")
+            else:
+                print(f"[TEMP] Erro ao enviar mqtt")
 
     except Exception as e:
         print(f"[TEMP] Erro: {e}")
