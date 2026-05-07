@@ -29,7 +29,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     else:
         print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[SOM] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
@@ -37,11 +37,11 @@ mongo_client = MongoClient(MONGO_URI)
 collection   = mongo_client[DB_NAME][COLLECTION]
 
 #ligação MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=True)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
-# mqtt_client.loop_start()
+mqtt_client.loop_start()
 
 print("[SOM] Publisher iniciado...")
 
@@ -58,7 +58,10 @@ while True:
             }
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
             # result.wait_for_publish()
-            print(f"[SOM] Enviado Id={payload['Id']}")
+            if result[0] == 0:
+                print(f"[SOM] Enviado Id={payload['Id']}")
+            else:
+                print(f"[SOM] Erro ao enviar mqtt")
 
     except Exception as e:
         print(f"[SOM] Erro: {e}")

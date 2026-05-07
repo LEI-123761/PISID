@@ -41,12 +41,14 @@ def on_message(client, userdata, msg):
         Id = data.get("Id")
 
         # marca o documento como Sent=True usando o id_seq incremental
+        filter = {'Id': Id}
+        update_operation = {"$set": {"Sent": True}}
         result = db[collection_name].update_one(
-            {"Id":  Id},
-            {"$set": {"Sent": True}}
+            filter,
+            update_operation
         )
 
-        if result.modified_count == 1:
+        if result.modified_count != 0:
             print(f"[FB] Sent=True em {collection_name} Id={ Id}")
         else:
             # pode acontecer se o documento foi apagado entretanto
@@ -56,15 +58,15 @@ def on_message(client, userdata, msg):
         print(f"[FB] Erro: {e}")
 
 #callback ligação
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print(f"[FB] Ligado ao broker | session present: {flags['session present']}")
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        print(f"[FB] Ligado ao broker | session present: ") # {flags['session present']}")
         client.subscribe(MQTT_TOPIC, qos=1)
     else:
-        print(f"[FB] Erro ao ligar, rc={rc}")
+        print(f"[FB] Erro ao ligar, rc={reason_code}")
 
 #liente MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=True)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)

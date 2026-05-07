@@ -29,23 +29,22 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
         print(f"[MOV] Erro ao ligar, rc={reason_code}")
 
 # chamada automaticamente quando o broker confirma recepção
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[MOV] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
 mongo_client = MongoClient(MONGO_URI)
 collection   = mongo_client[DB_NAME][COLLECTION]
 
-
 #ligação MQTT
 # clean_session=False activa sessão persistente — o broker guarda
 # mensagens QoS 2 pendentes se o script cair e reiniciar
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=True)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
 # loop_start() corre o MQTT em background para não bloquear o loop principal
-# mqtt_client.loop_start()
+mqtt_client.loop_start()
 
 print("[MOV] Publisher iniciado...")
 
@@ -69,7 +68,10 @@ while True:
             # wait_for_publish() bloqueia até o handshake estar completo
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=2)
             # result.wait_for_publish()
-            print(f"[MOV] Enviado Id={payload['Id']}")
+            if result[0] == 0:
+                print(f"[MOV] Enviado Id={payload['Id']}")
+            else:
+                print(f"[MOV] Erro ao enviar mqtt")
 
     except Exception as e:
         print(f"[MOV] Erro: {e}")

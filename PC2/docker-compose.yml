@@ -22,6 +22,7 @@ services:
     container_name: web
     volumes:
       - ./scripts/php:/var/www/html/maze_app_php
+      - ./web:/var/www/html/web
     ports:
       - "8080:80"
     depends_on:
@@ -76,19 +77,6 @@ services:
       dockerfile: PC2/Dockerfile
     container_name: sound
     command: python ./PC2/receiver/receiver_ruido.py
-    depends_on:
-      - mysql
-    networks:
-      - pc2-network
-    environment:
-      - PYTHONUNBUFFERED=1
-
-  feedback:
-    build:
-      context: ..
-      dockerfile: PC2/Dockerfile
-    container_name: feedback
-    command: python ./PC2/receiver/feedback.py
     depends_on:
       - mysql
     networks:
