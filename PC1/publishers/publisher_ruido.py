@@ -25,7 +25,7 @@ CLIENT_ID   = "pisid_publisher_ruido"
 #callbacks MQTT
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[SOM] Ligado ao broker | session present: {flags['session present']}")
+        print(f"[SOM] Ligado ao broker | session present: ") #{flags['session present']}")
     else:
         print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
