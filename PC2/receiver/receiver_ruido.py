@@ -44,6 +44,7 @@ else:
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -54,6 +55,7 @@ def on_message(client, userdata, msg):
                 return
 
         data = json.loads(msg.payload.decode())
+        print(data)
         print(f"[SOM] Recebido: {data}")
 
         # insere a leitura de ruído na tabela Som

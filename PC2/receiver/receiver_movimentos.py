@@ -51,6 +51,7 @@ else:
 
 # chamada automaticamente pelo paho quando chega uma mensagem
 def on_message(client, userdata, msg):
+    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -62,6 +63,7 @@ def on_message(client, userdata, msg):
 
         # msg.payload são bytes → decode() → string → json.loads() → dicionário
         data = json.loads(msg.payload.decode())
+        print(data)
         print(f"[MOV] Recebido: {data}")
 
         if mysqlclient is None:

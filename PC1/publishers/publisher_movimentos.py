@@ -69,7 +69,7 @@ while True:
             # wait_for_publish() bloqueia até o handshake estar completo
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=2)
             # result.wait_for_publish()
-            print(f"[MOV] Enviado id_seq={payload['id_seq']}")
+            print(f"[MOV] Enviado Id={payload['Id']}")
 
     except Exception as e:
         print(f"[MOV] Erro: {e}")
