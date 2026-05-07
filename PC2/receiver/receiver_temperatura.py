@@ -8,7 +8,6 @@
 # O feedback.py no PC1 recebe essa confirmação e marca
 # o documento original no MongoDB como Sent=True.
 
-
 import paho.mqtt.client as mqtt
 import mysql.connector
 import json

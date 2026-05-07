@@ -7,6 +7,7 @@ import threading
 import validacoes as v
 
 def check_occupation_origin(origin_index):
+    print("Checking room origin")
     time.sleep(3) #espera 3 segs
     origem= contador_marsamis[origin_index]
     if(origem[0] == origem[1]): #se nao sairam/entrarem marsamis
@@ -18,6 +19,7 @@ def check_occupation_origin(origin_index):
     mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
 
 def check_occupation_destiny(destiny_index):
+    print("Checking room destiny")
     time.sleep(3) #espera 3 segs
     destino= contador_marsamis[destiny_index]
     if(destino[0] == destino[1]): #se nao sairam marsamis
@@ -31,16 +33,19 @@ def check_occupation_destiny(destiny_index):
 def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
+    print("RECEIVED: ", msg)
+    print("Num marsamis: ", num_marsamis, " Num salas: ", num_salas)
     msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
 
     player= int((msg_sections[0].split(":"))[1])
     registo= {}
-    registo["Marsami"]= int((msg_sections[1].split(":"))[1])
+    marsami= int((msg_sections[1].split(":"))[1])
+    registo["Marsami"]= marsami
     registo["RoomOrigin"]= int((msg_sections[2].split(":"))[1])
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[player-1], num_salas)
+    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[marsami-1], num_salas)
     if(is_anomalo): #ver se e anomolo
         registo["Motivo"]= razao
         colecao= bd["move_errors"]
@@ -55,7 +60,7 @@ def receive_msg(client, userdata, message):
     current_id[0]+= 1
 
     #atualizar contadores e tratamento de marsamis
-    last_room[player-1]= registo["RoomOrigin"]
+    last_room[marsami-1]= registo["RoomDestiny"]
 
     origin_room_index= registo["RoomOrigin"]-1 #-1 como index
     destiny_room_index= registo["RoomDestiny"]-1
@@ -71,13 +76,13 @@ def receive_msg(client, userdata, message):
 
             if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3)):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-                (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
+                (threading.Thread(target=check_occupation_origin, args=(origin_room_index,))).start()
 
         destino_list[0]+= 1
         destino= tuple(destino_list)
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
+            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index,))).start()
     else:
         if(origin_room_index != -1):
             origem= contador_marsamis[origin_room_index]
@@ -87,26 +92,31 @@ def receive_msg(client, userdata, message):
 
             if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3)):
                 mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_origin, args=(origin_room_index))).start()
+            (threading.Thread(target=check_occupation_origin, args=(origin_room_index,))).start()
 
         destino_list[1]+= 1
         destino= tuple(destino_list)
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
             mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index))).start()
+            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index,))).start()
 
 ##################Codigo Principal##################
 #cliente MySQL (Cloud)
-# mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
-# cursor= mysql_cliente.cursor()
-#
-# num_salas= cursor.execute("SELECT numberrooms FROM SetupMaze")
-# num_marsamis= cursor.execute("SELECT numbermarsamis FROM SetupMaze")
-#
-# mysql_cliente.close()
+mysql_cliente= mysql.connector.connect(host="194.210.86.10", user="aluno", password="aluno", database="maze")
+cursor= mysql_cliente.cursor()
 
-num_salas= 20
-num_marsamis= 20
+try:
+    cursor.execute("SELECT numberrooms FROM SetupMaze")
+    num_salas= cursor.fetchone()[0]
+    cursor.execute("SELECT numbermarsamis FROM SetupMaze")
+    num_marsamis= cursor.fetchone()[0]
+
+except Exception as e:
+    print("Exception ", e)
+    num_salas= 50
+    num_marsamis= 50
+
+mysql_cliente.close()
 
 contador_marsamis= []
 tentativa_gatilho= []
@@ -127,7 +137,7 @@ bd= mongo_cliente["SensorData"] #nome da base de dados
 mqtt_cliente= mqtt.Client()
 mqtt_cliente.on_message= receive_msg
 
-# mqtt_cliente.connect("www.hivemq.com", 1883)
-mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
+mqtt_cliente.connect("broker.hivemq.com", 1883)
+# mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazemov_4")
 mqtt_cliente.loop_forever()

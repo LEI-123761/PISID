@@ -47,21 +47,16 @@ print("[TEMP] Publisher iniciado...")
 
 #loop principal para buscar coisas no mongo
 while True:
-    print("HI")
     try:
         docs = list(collection.find({"Sent": False}).sort("Id", 1))
-        print(docs)
 
         for doc in docs:
-            print(doc)
             payload = {
                 "Id":doc.get("Id"),
                 "Hour":doc.get("Hour"),
-                "Temperature":doc.get("Temperature"),
+                "Temperature":doc.get("Temperature")
             }
-            print(payload)
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
-            print("gonna wait")
             # result.wait_for_publish()
             print(f"[TEMP] Enviado id={payload['Id']}")
 

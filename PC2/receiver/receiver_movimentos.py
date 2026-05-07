@@ -8,7 +8,6 @@
 # O feedback.py no PC1 recebe essa confirmação e marca
 # o documento original no MongoDB como Sent=True.
 
-
 import paho.mqtt.client as mqtt
 import mysql.connector
 import json
@@ -21,7 +20,6 @@ MQTT_TOPIC_SUB = "mazemov_4"
 # tópico onde publicamos confirmação após inserir no MySQL
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 CLIENT_ID      = "pisid_receiver_movimentos"
-
 
 MYSQL_CONFIG = {
     "host":     utils.HOST,
@@ -53,6 +51,7 @@ else:
 
 # chamada automaticamente pelo paho quando chega uma mensagem
 def on_message(client, userdata, msg):
+    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -64,6 +63,7 @@ def on_message(client, userdata, msg):
 
         # msg.payload são bytes → decode() → string → json.loads() → dicionário
         data = json.loads(msg.payload.decode())
+        print(data)
         print(f"[MOV] Recebido: {data}")
 
         if mysqlclient is None:
@@ -93,11 +93,11 @@ def on_message(client, userdata, msg):
         # garante que Sent=True só é marcado quando os dados estão no MySQL
         feedback = {
             "collection": "moves_received",
-            "id_seq":     data["id_seq"],
+            "Id":     data["Id"],
             "status":     "ok"
         }
         client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[MOV] Feedback enviado id_seq={data['id_seq']}")
+        print(f"[MOV] Feedback enviado Id={data['Id']}")
 
     except Exception as e:
         print(f"[MOV] Erro: {e}")

@@ -8,7 +8,6 @@
 # O feedback.py no PC1 recebe essa confirmação e marca
 # o documento original no MongoDB como Sent=True.
 
-
 import paho.mqtt.client as mqtt
 import mysql.connector
 import json
@@ -45,6 +44,7 @@ else:
 
 #callback mensagem
 def on_message(client, userdata, msg):
+    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -55,6 +55,7 @@ def on_message(client, userdata, msg):
                 return
 
         data = json.loads(msg.payload.decode())
+        print(data)
         print(f"[SOM] Recebido: {data}")
 
         # insere a leitura de ruído na tabela Som
@@ -70,11 +71,11 @@ def on_message(client, userdata, msg):
         # feedback publicado após commit confirmado
         feedback = {
             "collection": "sounds_received",
-            "id_seq":     data["id_seq"],
+            "Id":     data["Id"],
             "status":     "ok"
         }
         client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[SOM] Feedback enviado id_seq={data['id_seq']}")
+        print(f"[SOM] Feedback enviado Id={data['Id']}")
 
     except Exception as e:
         print(f"[SOM] Erro: {e}")
