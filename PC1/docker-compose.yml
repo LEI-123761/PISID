@@ -87,6 +87,18 @@ services:
     depends_on:
       - mongo-setup
 
+  feedback:
+    image: python:3.11
+    container_name: feedback
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/feedback.py"
+    depends_on:
+      - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
+
   script_som:
     image: python:3.11
     container_name: script_som
