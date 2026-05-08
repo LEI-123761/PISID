@@ -48,7 +48,7 @@ def on_message(client, userdata, msg):
             update_operation
         )
 
-        if result.modified_count != 0:
+        if result.modified_count > 0:
             print(f"[FB] Sent=True em {collection_name} Id={ Id}")
         else:
             # pode acontecer se o documento foi apagado entretanto

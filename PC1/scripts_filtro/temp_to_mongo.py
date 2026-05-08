@@ -24,6 +24,7 @@ def receive_msg(client, userdata, message):
         colecao= bd["temp_outliers"]
     else: #cc e um valor valido
         registo["Id"]= current_id[0]
+        current_id[0]+= 1
         registo["Sent"]= False
         colecao= bd["temps_received"]
 
@@ -32,7 +33,6 @@ def receive_msg(client, userdata, message):
             del last_three[0]
 
     colecao.insert_one(registo)
-    current_id[0]+= 1
 
 ##################Codigo Principal##################
 #cliente MySQL
