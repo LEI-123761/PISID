@@ -59,7 +59,9 @@ while True:
             }
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
             result.wait_for_publish()
-            print(f"[SOM] Enviado id_seq={payload['id_seq']}")
+
+            collection.update_one({"_id": doc["_id"]}, {"$set": {"Sent": True}})
+            print(f"[SOM] Enviado id_seq={payload['id_seq']} e marcado como enviado.")
 
     except Exception as e:
         print(f"[SOM] Erro: {e}")

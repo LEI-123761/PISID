@@ -12,6 +12,7 @@ SOUNDS_PASSWORD="mig_som4"
 
 # Mysql DB
 HOST="mysql"
+PORT = 3306
 DATABASE="maze"
 MYSQL_ATTEMPTS = 5
 
