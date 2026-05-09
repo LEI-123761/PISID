@@ -15,6 +15,8 @@
   - `scripts/`:
     - `moves_to_sql.py`, `temps_to_sql.py`, `sounds_to_sql.py`: Python scripts for MySQL
     - `php/`: Web files for the Apache+PHP container
+  - `web/`: PHP scripts for handling HTML form submissions and database interactions
+    - `css/`: Stylesheet for the web interface
 
 - **requirements.txt**  
   Python dependencies for all services

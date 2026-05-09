@@ -1,0 +1,120 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 90%;
+    max-width: 1000px;
+}
+
+/* Header: Título e Botão Criar lado a lado */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.more {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.more:hover {
+    background-color: #222;
+}
+
+/* Content Border (O quadrado que envolve a tabela) */
+.table {
+    background-color: white;
+    border: 2px solid #333; /* Borda grossa como no print */
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Estilização da Tabela */
+table {
+    width: 100%;
+    border-collapse: collapse; /* Remove as bordas duplas */
+}
+
+th {
+    background-color: #e0e0e0;
+    color: #555;
+    font-size: 14px;
+    text-transform: uppercase;
+    padding: 12px;
+    border: 1px solid #ccc;
+}
+
+td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    text-align: center;
+    color: #444;
+}
+
+/* Ações (Botões Lápis e Play) */
+.acoes-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-edit, .btn-play {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+.btn-edit:hover, .btn-play:hover {
+    background-color: #e0e0e0;
+}
+
+td[colspan="4"] {
+    padding: 30px;
+    color: #888;
+    font-style: italic;
+}
+
+.alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #856404;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    font-weight: bold;
+    display: block;
+    transition: opacity 0.5s ease;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
