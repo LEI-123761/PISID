@@ -74,31 +74,38 @@ def on_message(client, userdata, msg):
 
             return
 
-        # insere o movimento no MySQL
-        # %s são placeholders protegidos contra SQL injection
-        mycursor.execute("""
-            INSERT INTO MedicoesPassagens (IDSimulacao, SalaOrigem, SalaDestino, Marsami, Status)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (
-            ID_SIMULACAO,
-            data.get("RoomOrigin"),
-            data.get("RoomDestiny"),
-            data.get("Marsami"),
-            data.get("Status"),
-        ))
-        # commit confirma a transação
-        mysqlclient.commit()
+        #verificar q ID nao existe
+        mycursor.execute("SELECT IDMedicao FROM MedicoesPassagens WHERE IDMedicao="+str(data.get("Id")))
+        result= mycursor.fetchone()
 
-        # feedback publicado DEPOIS do commit
-        # garante que Sent=True só é marcado quando os dados estão no MySQL
-        feedback = {
-            "collection": "moves_received",
-            "Id":     data["Id"],
-            "status":     "ok"
-        }
-        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[MOV] Feedback enviado Id={data['Id']}")
+        if(result == None):
+            print("Nao existe, podes inserir")
+            # insere o movimento no MySQL
+            # %s são placeholders protegidos contra SQL injection
+            mycursor.execute("""
+                INSERT INTO MedicoesPassagens (IDSimulacao, SalaOrigem, SalaDestino, Marsami, Status)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                ID_SIMULACAO,
+                data.get("RoomOrigin"),
+                data.get("RoomDestiny"),
+                data.get("Marsami"),
+                data.get("Status"),
+            ))
+            # commit confirma a transação
+            mysqlclient.commit()
 
+            # feedback publicado DEPOIS do commit
+            # garante que Sent=True só é marcado quando os dados estão no MySQL
+            feedback = {
+                "collection": "moves_received",
+                "Id":     data["Id"],
+                "status":     "ok"
+            }
+            client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+            print(f"[MOV] Feedback enviado Id={data['Id']}")
+        else:
+            print("Ja existe, nao vou inserir")
     except Exception as e:
         print(f"[MOV] Erro: {e}")
         # rollback cancela transação incompleta

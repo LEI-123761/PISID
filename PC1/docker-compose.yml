@@ -171,5 +171,13 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
 
+#  testing:
+#    image: python:3.11
+#    container_name: testing
+#    working_dir: /PISID_Project/PC1
+#    volumes:
+#      - .:/PISID_Project/PC1
+#    command: sh -c "pip install pymongo && python test.py"
+
 volumes:
   mysql_data:

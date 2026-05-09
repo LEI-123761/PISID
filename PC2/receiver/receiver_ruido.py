@@ -58,25 +58,32 @@ def on_message(client, userdata, msg):
         print(data)
         print(f"[SOM] Recebido: {data}")
 
-        # insere a leitura de ruído na tabela Som
-        mycursor.execute("""
-            INSERT INTO Som (IDSimulacao, Som)
-            VALUES (%s, %s)
-        """, (
-            ID_SIMULACAO,
-            data.get("Sound"),
-        ))
-        mysqlclient.commit()
+        #verificar q ID nao existe
+        mycursor.execute("SELECT IDSom FROM Som WHERE IDSom="+str(data.get("Id")))
+        result= mycursor.fetchone()
 
-        # feedback publicado após commit confirmado
-        feedback = {
-            "collection": "sounds_received",
-            "Id":     data["Id"],
-            "status":     "ok"
-        }
-        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[SOM] Feedback enviado Id={data['Id']}")
+        if(result == None):
+            print("Nao existe, podes inserir")
+            # insere a leitura de ruído na tabela Som
+            mycursor.execute("""
+                INSERT INTO Som (IDSimulacao, Som)
+                VALUES (%s, %s)
+            """, (
+                ID_SIMULACAO,
+                data.get("Sound"),
+            ))
+            mysqlclient.commit()
 
+            # feedback publicado após commit confirmado
+            feedback = {
+                "collection": "sounds_received",
+                "Id":     data["Id"],
+                "status":     "ok"
+            }
+            client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+            print(f"[SOM] Feedback enviado Id={data['Id']}")
+        else:
+            print("Ja existe, nao vou inserir")
     except Exception as e:
         print(f"[SOM] Erro: {e}")
         mysqlclient.rollback()

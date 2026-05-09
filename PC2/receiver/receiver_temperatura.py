@@ -45,7 +45,9 @@ else:
 
 #callback mensagem
 def on_message(client, userdata, msg):
-    print(msg.payload.decode())
+    # print(msg.payload.decode())
+    # print("resistance: ", msg.retain)
+    # print("dup: ", msg.dup)
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -59,24 +61,31 @@ def on_message(client, userdata, msg):
         print(data)
         print(f"[TEMP] Recebido: {data}")
 
-        # insere a leitura de temperatura na tabela Temperatura
-        mycursor.execute("""
-            INSERT INTO Temperatura (IDSimulacao, Temperatura)
-            VALUES (%s, %s)
-        """, (
-            ID_SIMULACAO,
-            data.get("Temperature"),
-        ))
-        mysqlclient.commit()
-        # feedback publicado após commit confirmado
-        feedback = {
-            "collection": "temps_received",
-            "Id":     data["Id"],
-            "status":     "ok"
-        }
-        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[TEMP] Feedback enviado Id={data['Id']}")
+        #verificar q ID nao existe
+        mycursor.execute("SELECT IDTemperatura FROM Temperatura WHERE IDTemperatura="+str(data.get("Id")))
+        result= mycursor.fetchone()
 
+        if(result == None):
+            print("Nao existe, podes inserir")
+            # insere a leitura de temperatura na tabela Temperatura
+            mycursor.execute("""
+                             INSERT INTO Temperatura (IDSimulacao, Temperatura)
+                             VALUES (%s, %s)
+                             """, (
+                                 ID_SIMULACAO,
+                                 data.get("Temperature"),
+                             ))
+            mysqlclient.commit()
+            # feedback publicado após commit confirmado
+            feedback = {
+                "collection": "temps_received",
+                "Id":     data["Id"],
+                "status":     "ok"
+            }
+            client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+            print(f"[TEMP] Feedback enviado Id={data['Id']}")
+        else:
+            print("Ja existe, nao vou inserir")
     except Exception as e:
         print(f"[TEMP] Erro: {e}")
         mysqlclient.rollback()
