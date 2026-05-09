@@ -62,13 +62,14 @@ def check_atuadores_temp(mysql_conn, mqtt_client):
         alertas = cursor.fetchall()
 
         for id_msg, msg_texto in alertas:
+            print(f"[ATUADOR-TEMP] Analisando mensagem ID {id_msg}: {msg_texto}")
             msg_clean = msg_texto.lower()
             comando_json = None
 
             # 3. Procurar por "maxim" ou "minim" (sem acentos para evitar erros)
-            if "maxim" in msg_clean:
+            if "máximo" in msg_clean:
                 comando_json = {"Type": "AcOn", "Player": PLAYER_ID}
-            elif "minim" in msg_clean:
+            elif "mínimo" in msg_clean:
                 comando_json = {"Type": "AcOff", "Player": PLAYER_ID}
 
             if comando_json:
@@ -88,20 +89,17 @@ def on_message(client, userdata, msg):
     # ADICIONA ESTA LINHA PARA TESTE:
     print(f"DEBUG: Recebi algo no tópico {msg.topic}: {msg.payload.decode()}")
     try:
-        print("chegou ate aqui0")
         if ID_SIMULACAO is None:
             ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
             if ID_SIMULACAO is None: return
-        print("chegou ate aqui1")
         data = json.loads(msg.payload.decode())
         mycursor.execute("INSERT INTO Temperatura (IDSimulacao, Temperatura) VALUES (%s, %s)",
                          (ID_SIMULACAO, data.get("Temperature")))
         mysqlclient.commit()
-        print("chegou ate aqui2")
+
         # Verifica se o trigger disparou um alerta de temperatura
-        time.sleep(0.5)
         check_atuadores_temp(mysqlclient, client)
-        print("chegou ate aqui3")
+
         feedback = {"collection": "temps_received", "id_seq": data["id_seq"], "status": "ok"}
         client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
     except Exception as e:

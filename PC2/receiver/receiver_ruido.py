@@ -48,7 +48,8 @@ def check_atuadores_som(mysql_conn, mqtt_client):
         alertas = cursor.fetchall()
 
         for id_msg, msg_texto in alertas:
-            if "maxim" in msg_texto.lower():
+            print(f"[ATUADOR-SOM] Analisando mensagem ID {id_msg}: {msg_texto}")
+            if "máximo" in msg_texto.lower():
                 comando = {"Type": "CloseAllDoor", "Player": PLAYER_ID}
                 mqtt_client.publish(MQTT_TOPIC_ACT, json.dumps(comando), qos=1)
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
