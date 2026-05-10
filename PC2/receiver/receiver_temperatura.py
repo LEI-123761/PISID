@@ -76,16 +76,17 @@ def on_message(client, userdata, msg):
                                  data.get("Temperature"),
                              ))
             mysqlclient.commit()
-            # feedback publicado após commit confirmado
-            feedback = {
-                "collection": "temps_received",
-                "Id":     data["Id"],
-                "status":     "ok"
-            }
-            client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-            print(f"[TEMP] Feedback enviado Id={data['Id']}")
         else:
             print("Ja existe, nao vou inserir")
+
+        # feedback publicado após commit confirmado
+        feedback = {
+            "collection": "temps_received",
+            "Id":     data["Id"],
+            "status":     "ok"
+        }
+        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+        print(f"[TEMP] Feedback enviado Id={data['Id']}")
     except Exception as e:
         print(f"[TEMP] Erro: {e}")
         mysqlclient.rollback()

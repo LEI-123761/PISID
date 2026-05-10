@@ -94,18 +94,18 @@ def on_message(client, userdata, msg):
             ))
             # commit confirma a transação
             mysqlclient.commit()
-
             # feedback publicado DEPOIS do commit
-            # garante que Sent=True só é marcado quando os dados estão no MySQL
-            feedback = {
-                "collection": "moves_received",
-                "Id":     data["Id"],
-                "status":     "ok"
-            }
-            client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-            print(f"[MOV] Feedback enviado Id={data['Id']}")
         else:
             print("Ja existe, nao vou inserir")
+
+        # garante que Sent=True só é marcado quando os dados estão no MySQL
+        feedback = {
+            "collection": "moves_received",
+            "Id":     data["Id"],
+            "status":     "ok"
+        }
+        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+        print(f"[MOV] Feedback enviado Id={data['Id']}")
     except Exception as e:
         print(f"[MOV] Erro: {e}")
         # rollback cancela transação incompleta
