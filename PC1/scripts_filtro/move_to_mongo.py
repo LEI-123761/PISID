@@ -45,7 +45,9 @@ def receive_msg(client, userdata, message):
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[marsami-1], num_salas)
+    cursor.execute("SELECT active FROM Corridor WHERE RoomA="+str(registo["RoomOrigin"])+" AND RoomB="+str(registo["RoomDestiny"]))
+    active= cursor.fetchone()
+    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[marsami-1], num_salas, active)
     if(is_anomalo): #ver se e anomolo
         registo["Motivo"]= razao
         colecao= bd["move_errors"]
@@ -116,7 +118,7 @@ except Exception as e:
     num_salas= 50
     num_marsamis= 50
 
-mysql_cliente.close()
+# mysql_cliente.close()
 
 contador_marsamis= []
 tentativa_gatilho= []
