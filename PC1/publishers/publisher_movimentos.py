@@ -24,7 +24,7 @@ CLIENT_ID   = "pisid_publisher_movimentos"
 # chamada automatica quando se liga ao broker
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[MOV] Ligado ao broker | session present: {flags['session present']}")
+        print(f"[MOV] Ligado ao broker | session present: ") #{flags['session present']}")
     else:
         print(f"[MOV] Erro ao ligar, rc={reason_code}")
 
