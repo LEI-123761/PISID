@@ -98,11 +98,12 @@ def on_message(client, userdata, msg):
         print(f"[TEMP] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDMongo FROM Temperatura WHERE IDMongo="+str(data.get("Id")))
+        mycursor.execute("SELECT IDMongo FROM Temperatura WHERE IDMongo="+str(data.get("Id"))+"AND IDSimulacao="+ID_SIMULACAO)
         result= mycursor.fetchone()
 
         if(result == None):
             # insere a leitura de temperatura na tabela Temperatura
+            print("id", str(data.get("Id")))
             mycursor.execute("""
                              INSERT INTO Temperatura (IDSimulacao, IDMongo, Hora, Temperatura)
                              VALUES (%s, %s, %s, %s)

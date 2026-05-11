@@ -73,14 +73,15 @@ def on_message(client, userdata, msg):
         print(f"[SOM] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDMongo FROM Som WHERE IDMongo="+str(data.get("Id")))
+        mycursor.execute("SELECT IDMongo FROM Som WHERE IDMongo="+str(data.get("Id"))+"AND IDSimulacao="+ID_SIMULACAO)
         result= mycursor.fetchone()
 
         if(result == None):
+            print("id", str(data.get("Id")))
             # insere a leitura de ruído na tabela Som
             mycursor.execute("""
                              INSERT INTO Som (IDSimulacao, IDMongo, Hora, Som)
-                             VALUES (%s, %s)
+                             VALUES (%s, %s, %s, %s)
                              """, (
                                  ID_SIMULACAO,
                                  data.get("Id"),
