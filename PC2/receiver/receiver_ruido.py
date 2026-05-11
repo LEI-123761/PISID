@@ -48,7 +48,8 @@ def check_atuadores_som(mysql_conn, mqtt_client):
         alertas = cursor.fetchall()
 
         for id_msg, msg_texto in alertas:
-            if "maxim" in msg_texto.lower():
+            print(f"[ATUADOR-SOM] Analisando mensagem ID {id_msg}: {msg_texto}")
+            if "máximo" in msg_texto.lower():
                 comando = {"Type": "CloseAllDoor", "Player": PLAYER_ID}
                 mqtt_client.publish(MQTT_TOPIC_ACT, json.dumps(comando), qos=1)
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
@@ -58,7 +59,6 @@ def check_atuadores_som(mysql_conn, mqtt_client):
         print(f"[ATUADOR-SOM] Erro: {e}")
 
 def on_message(client, userdata, msg):
-    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -69,7 +69,6 @@ def on_message(client, userdata, msg):
                 return
 
         data = json.loads(msg.payload.decode())
-        print(data)
         print(f"[SOM] Recebido: {data}")
 
         #verificar q ID nao existe
@@ -77,7 +76,6 @@ def on_message(client, userdata, msg):
         result= mycursor.fetchone()
 
         if(result == None):
-            print("Nao existe, podes inserir")
             # insere a leitura de ruído na tabela Som
             mycursor.execute("""
                              INSERT INTO Som (IDSimulacao, Som)
@@ -87,8 +85,9 @@ def on_message(client, userdata, msg):
                                  data.get("Sound"),
                              ))
             mysqlclient.commit()
+            print("[SOM] Nova leitura inserida com IDSom:", mycursor.lastrowid)
         else:
-            print("Ja existe, nao vou inserir")
+            print("[SOM] Já existe, não foi inserido")
 
         # Verifica se o trigger disparou um alerta de som
         check_atuadores_som(mysqlclient, client)

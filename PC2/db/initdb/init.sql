@@ -254,12 +254,14 @@ DELIMITER ;
 -- Permissões som script
 CREATE USER IF NOT EXISTS 'mig_som'@'%' IDENTIFIED BY 'mig_som4';
 GRANT SELECT,INSERT ON maze.Som TO 'mig_som'@'%';
+GRANT SELECT ON maze.Mensagens TO 'mig_som'@'%';
 GRANT SELECT ON maze.Simulacao TO 'mig_som'@'%';
 GRANT SELECT ON maze.Parametros TO 'mig_som'@'%';
 
 -- Permissões temperatura script
 CREATE USER IF NOT EXISTS 'mig_temperatura'@'%' IDENTIFIED BY 'mig_temperatura4';
 GRANT SELECT, INSERT ON maze.Temperatura TO 'mig_temperatura'@'%';
+GRANT SELECT ON maze.Mensagens TO 'mig_temperatura'@'%';
 GRANT SELECT ON maze.Simulacao TO 'mig_temperatura'@'%';
 GRANT SELECT ON maze.Parametros TO 'mig_temperatura'@'%';
 

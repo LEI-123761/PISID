@@ -62,13 +62,14 @@ def check_atuadores_temp(mysql_conn, mqtt_client):
         alertas = cursor.fetchall()
 
         for id_msg, msg_texto in alertas:
+            print(f"[ATUADOR-TEMP] Analisando mensagem ID {id_msg}: {msg_texto}")
             msg_clean = msg_texto.lower()
             comando_json = None
 
             # 3. Procurar por "maxim" ou "minim" (sem acentos para evitar erros)
-            if "maxim" in msg_clean:
+            if "máximo" in msg_clean:
                 comando_json = {"Type": "AcOn", "Player": PLAYER_ID}
-            elif "minim" in msg_clean:
+            elif "mínimo" in msg_clean:
                 comando_json = {"Type": "AcOff", "Player": PLAYER_ID}
 
             if comando_json:
@@ -84,9 +85,6 @@ def check_atuadores_temp(mysql_conn, mqtt_client):
         print(f"[ATUADOR-TEMP] Erro ao verificar AC: {e}")
 
 def on_message(client, userdata, msg):
-    # print(msg.payload.decode())
-    # print("resistance: ", msg.retain)
-    # print("dup: ", msg.dup)
     global ID_SIMULACAO
     try:
         if ID_SIMULACAO is None:
@@ -97,7 +95,6 @@ def on_message(client, userdata, msg):
                 return
 
         data = json.loads(msg.payload.decode())
-        print(data)
         print(f"[TEMP] Recebido: {data}")
 
         #verificar q ID nao existe
@@ -105,7 +102,6 @@ def on_message(client, userdata, msg):
         result= mycursor.fetchone()
 
         if(result == None):
-            print("Nao existe, podes inserir")
             # insere a leitura de temperatura na tabela Temperatura
             mycursor.execute("""
                              INSERT INTO Temperatura (IDSimulacao, Temperatura)
@@ -115,8 +111,9 @@ def on_message(client, userdata, msg):
                                  data.get("Temperature"),
                              ))
             mysqlclient.commit()
+            print("[TEMP] Nova leitura inserida com IDTemperatura:", mycursor.lastrowid)
         else:
-            print("Ja existe, nao vou inserir")
+            print("[TEMP] Já existe, não foi inserido")
 
         # Verifica se o trigger disparou um alerta de temperatura
         check_atuadores_temp(mysqlclient, client)
