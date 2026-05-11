@@ -420,7 +420,7 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE Criar_jogo(
-    IN p_idUtilizador INT
+    IN p_idUtilizador INT,
     IN p_descricao TEXT
 )
 BEGIN
