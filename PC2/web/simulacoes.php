@@ -25,7 +25,7 @@ if (isset($_GET['executar_id'])) {
     $status_atual = $stmt->get_result()->fetch_assoc()['Status'];
 
     if ($status_atual == 'Correr') {
-        $warning = "A simulação " . $id_para_correr . " já está em execução!";
+        $warning = "A simulação " . $id_para_correr . " já está a correr!";
     } else {
         $sql_update = "UPDATE Simulacao SET Status = 'Correr' WHERE IDSimulacao = ? AND IDUtilizador = ?";
         $stmt_up = $ligacao->prepare($sql_update);
@@ -51,7 +51,7 @@ $resultado = $stmt->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulações</title>
-    <link rel="stylesheet" href="css/simulacao.css">
+    <link rel="stylesheet" href="css/simulacoes.css">
 </head>
 
 <body>
@@ -59,7 +59,27 @@ $resultado = $stmt->get_result();
     <div class="header-container">
         <h2 class="title"> Olá, <?php echo $_SESSION['Email']; ?></h2>
         <?php if ($warning != ""): ?>
-            <div class="alert"><?php echo $warning; ?></div>
+            <div id="popup-warning" class="alert">
+                <?php echo $warning; ?>
+            </div>
+
+            <script>
+                var popup = document.getElementById('popup-warning');
+
+                if (popup) {
+                    setTimeout(function() {
+                        popup.classList.add('show');
+                    }, 100);
+
+                    setTimeout(function() {
+                        popup.classList.remove('show');
+
+                        setTimeout(function() {
+                            popup.remove();
+                        }, 500);
+                    }, 2500);
+                }
+            </script>
         <?php endif; ?>
         <button title="Criar uma nova simulação" class="more" onclick="window.location.href='nova_simulacao.php'">Criar +</button>
     </div>
