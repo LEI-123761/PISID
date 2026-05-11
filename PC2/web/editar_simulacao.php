@@ -10,6 +10,21 @@ $simulacao_id = $_GET['id'];
 
 $ligacao = new mysqli("mysql", "root", "root", "maze");
 
+$sql = "SELECT * FROM Simulacao WHERE IDSimulacao = ? AND IDUtilizador = ?";
+$stmt = $ligacao->prepare($sql);
+$stmt->bind_param("ii", $simulacao_id, $user_id);
+$stmt->execute();
+$dados = $stmt->get_result()->fetch_assoc();
+
+if (!$dados) {
+    die("Simulação não encontrada ou sem permissão.");
+}
+
+if ($dados['Status'] === 'Correr') {
+    header("Location: simulacoes.php?erro=bloqueado&id=" . $simulacao_id);
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btnGuardar'])) {
     $nova_descricao = $_POST['descricao'];
     $sql = "CALL Alterar_jogo(?, ?)";
@@ -24,16 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btnGuardar'])) {
     } else {
         $error = "Erro ao executar procedure: " . $ligacao->error;
     }
-}
-
-$sql = "SELECT * FROM Simulacao WHERE IDSimulacao = ? AND IDUtilizador = ?";
-$stmt = $ligacao->prepare($sql);
-$stmt->bind_param("ii", $simulacao_id, $user_id);
-$stmt->execute();
-$dados = $stmt->get_result()->fetch_assoc();
-
-if (!$dados) {
-    die("Simulação não encontrada ou sem permissão.");
 }
 ?>
 
