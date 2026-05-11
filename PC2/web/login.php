@@ -4,10 +4,8 @@ $error="";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Ligação à base de dados
     $ligacao = new mysqli("mysql", "root", "root", "maze");
 
-    // Verificar erros de ligação
     if ($ligacao->connect_error) {
         die("Erro na ligação: " . $ligacao->connect_error);
     }

@@ -27,6 +27,7 @@ if (isset($_GET['executar_id'])) {
     if ($status_atual == 'Correr') {
         $warning = "A simulação " . $id_para_correr . " já está a correr!";
     } else {
+        //ADICIONAR LINHA DE CÓDIGO QUE EXECUTE O SCRIPT PYTHON OU MAZERUN.EXE
         $sql_update = "UPDATE Simulacao SET Status = 'Correr' WHERE IDSimulacao = ? AND IDUtilizador = ?";
         $stmt_up = $ligacao->prepare($sql_update);
         $stmt_up->bind_param("ii", $id_para_correr, $user_id);
@@ -36,6 +37,13 @@ if (isset($_GET['executar_id'])) {
             exit();
         }
     }
+}
+
+$warning2 = "";
+
+if (isset($_GET['erro']) && $_GET['erro'] == 'bloqueado') {
+    $id_erro = isset($_GET['id']) ? $_GET['id'] : "";
+    $warning2 = "Não é possível editar a simulação $id_erro. (Já está em execução)";
 }
 
 $sql = "SELECT IDSimulacao, Descricao, Status FROM Simulacao WHERE IDUtilizador = ?";
@@ -61,6 +69,29 @@ $resultado = $stmt->get_result();
         <?php if ($warning != ""): ?>
             <div id="popup-warning" class="alert">
                 <?php echo $warning; ?>
+            </div>
+
+            <script>
+                var popup = document.getElementById('popup-warning');
+
+                if (popup) {
+                    setTimeout(function() {
+                        popup.classList.add('show');
+                    }, 100);
+
+                    setTimeout(function() {
+                        popup.classList.remove('show');
+
+                        setTimeout(function() {
+                            popup.remove();
+                        }, 500);
+                    }, 2500);
+                }
+            </script>
+        <?php endif; ?>
+        <?php if ($warning2 != ""): ?>
+            <div id="popup-warning" class="alert">
+                <?php echo $warning2; ?>
             </div>
 
             <script>
