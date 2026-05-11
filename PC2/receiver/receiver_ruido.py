@@ -15,7 +15,7 @@ import utils
 from connection import connect_to_mysql
 
 # Configuração
-MQTT_TOPIC_SUB = "pisid_mazesound_4"
+MQTT_TOPIC_SUB = "mazesound_4"
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 MQTT_TOPIC_ACT = "pisid_mazeact"
 CLIENT_ID      = "pisid_receiver_ruido"
@@ -50,8 +50,9 @@ def check_atuadores_som(mysql_conn, mqtt_client):
         for id_msg, msg_texto in alertas:
             print(f"[ATUADOR-SOM] Analisando mensagem ID {id_msg}: {msg_texto}")
             if "máximo" in msg_texto.lower():
-                comando = {"Type": "CloseAllDoor", "Player": PLAYER_ID}
-                mqtt_client.publish(MQTT_TOPIC_ACT, json.dumps(comando), qos=1)
+                comando = f'{{"Type": CloseAllDoor, "Player": {PLAYER_ID}}}'
+                print(comando)
+                mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
             ultima_msg_id = id_msg
         cursor.close()

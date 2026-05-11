@@ -110,8 +110,8 @@ CREATE TABLE Parametros (
   SomMax decimal(4,2) DEFAULT NULL,
 
   -- outliers (only read on mongo)
-  LimiarTemperatura decimal(4,2) DEFAULT 5, 
-  LimiarSom decimal(4,2) DEFAULT 5,
+  LimiarTemperatura decimal(4,2) DEFAULT 4, 
+  LimiarSom decimal(4,2) DEFAULT 4,
 
   -- alertas (only read on mysql, can be defined by user)
   LimiarAlertaTemperatura decimal(4,2) DEFAULT 5,
@@ -292,7 +292,7 @@ INSERT INTO Parametros (
     LimiarAlertaTemperatura,
     LimiarAlertaSom
 )
-VALUES (1, 40, 10, 80, 5, 5)
+VALUES (1, 35, 5, 27, 5, 5)
 ON DUPLICATE KEY UPDATE IDSimulacao = IDSimulacao;
 
 -- =========================

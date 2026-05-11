@@ -16,7 +16,7 @@ import time
 from connection import connect_to_mysql
 
 # Configuração
-MQTT_TOPIC_SUB = "pisid_mazetemp_4"
+MQTT_TOPIC_SUB = "mazetemp_4"
 MQTT_TOPIC_FB  = "pisid_feedback_4"
 MQTT_TOPIC_ACT = "pisid_mazeact"
 CLIENT_ID      = "pisid_receiver_temperatura"
@@ -64,19 +64,19 @@ def check_atuadores_temp(mysql_conn, mqtt_client):
         for id_msg, msg_texto in alertas:
             print(f"[ATUADOR-TEMP] Analisando mensagem ID {id_msg}: {msg_texto}")
             msg_clean = msg_texto.lower()
-            comando_json = None
+            comando = None
 
             # 3. Procurar por "maxim" ou "minim" (sem acentos para evitar erros)
             if "máximo" in msg_clean:
-                comando_json = {"Type": "AcOn", "Player": PLAYER_ID}
+                comando = f'{{"Type": AcOn, "Player": {PLAYER_ID}}}'
             elif "mínimo" in msg_clean:
-                comando_json = {"Type": "AcOff", "Player": PLAYER_ID}
+                comando = f'{{"Type": AcOff, "Player": {PLAYER_ID}}}'
 
-            if comando_json:
+            if comando:
                 # 4. Publicar o comando
-                mqtt_client.publish(MQTT_TOPIC_ACT, json.dumps(comando_json), qos=1)
+                mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
                 # PRINT IMPORTANTE para veres no terminal:
-                print(f"!!! [AC] COMANDO ENVIADO: {comando_json['Type']} para o alerta {id_msg}")
+                print(f"!!! [AC] COMANDO ENVIADO: {comando} para o alerta {id_msg}")
 
             ultima_msg_id = id_msg
 
