@@ -6,7 +6,7 @@ import time
 import threading
 import validacoes as v
 
-def check_occupation_origin(origin_index):
+def check_occupation_origin(origin_index, closed):
     print("Checking room origin")
     time.sleep(3) #espera 3 segs
     origem= contador_marsamis[origin_index]
@@ -16,9 +16,12 @@ def check_occupation_origin(origin_index):
             tentativa_gatilho[origin_index]+= 1
 
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
-    mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
+    for c in closed: #abrir todas as portas da sala
+        mqtt_cliente.publish("pisid_mazeact",
+                             "{Type:OpenDoor, Player:4, "
+                             "RoomOrigin:"+str(c[0])+", RoomDestiny:"+str(c[1])+"}", 2)
 
-def check_occupation_destiny(destiny_index):
+def check_occupation_destiny(destiny_index, closed):
     print("Checking room destiny")
     time.sleep(3) #espera 3 segs
     destino= contador_marsamis[destiny_index]
@@ -28,7 +31,32 @@ def check_occupation_destiny(destiny_index):
             tentativa_gatilho[destiny_index]+= 1
 
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
-    mqtt_cliente.publish("pisid_mazeact", "{Type:OpenAllDoor, Player:4}", 2) #mudar para abrir todas as portas da sala
+    for c in closed: #abrir todas as portas da sala
+        mqtt_cliente.publish("pisid_mazeact",
+                             "{Type:OpenDoor, Player:4, "
+                             "RoomOrigin:"+str(c[0])+", RoomDestiny:"+str(c[1])+"}", 2)
+
+def close_room(sala):
+    cursor.execute("SELECT RoomB FROM Corridor WHERE RoomA="+str(sala))
+    destinos= cursor.fetchall()
+
+    cursor.execute("SELECT RoomA FROM Corridor WHERE RoomB="+str(sala))
+    origems= cursor.fetchall()
+
+    closed= []
+    for d in destinos:
+        mqtt_cliente.publish("pisid_mazeact",
+                             "{Type:CloseDoor, Player:4, "
+                             "RoomOrigin:"+str(sala)+", RoomDestiny:"+str(d[0])+"}", 2)
+        closed.append((sala, d[0]))
+
+    for o in origems:
+        mqtt_cliente.publish("pisid_mazeact",
+                             "{Type:CloseDoor, Player:4, "
+                             "RoomOrigin:"+str(o[0])+", RoomDestiny:"+str(sala)+"}", 2)
+        closed.append((o[0], sala))
+
+    return closed
 
 def receive_msg(client, userdata, message):
     #set up registo
@@ -45,7 +73,9 @@ def receive_msg(client, userdata, message):
     registo["RoomDestiny"]= int((msg_sections[3].split(":"))[1])
     registo["Status"]= int((msg_sections[4].split(":"))[1])
 
-    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[marsami-1], num_salas)
+    cursor.execute("SELECT active FROM Corridor WHERE RoomA="+str(registo["RoomOrigin"])+" AND RoomB="+str(registo["RoomDestiny"]))
+    active= cursor.fetchone()
+    is_anomalo, razao= v.move_anomalo(registo, player, num_marsamis, last_room[marsami-1], num_salas, active)
     if(is_anomalo): #ver se e anomolo
         registo["Motivo"]= razao
         colecao= bd["move_errors"]
@@ -75,14 +105,14 @@ def receive_msg(client, userdata, message):
             origem= tuple(origem_list)
 
             if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3)):
-                mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-                (threading.Thread(target=check_occupation_origin, args=(origin_room_index,))).start()
+                closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
+                (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
         destino_list[0]+= 1
         destino= tuple(destino_list)
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
-            mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index,))).start()
+            closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
+            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
     else:
         if(origin_room_index != -1):
             origem= contador_marsamis[origin_room_index]
@@ -91,14 +121,14 @@ def receive_msg(client, userdata, message):
             origem= tuple(origem_list)
 
             if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3)):
-                mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_origin, args=(origin_room_index,))).start()
+                closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
+                (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
         destino_list[1]+= 1
         destino= tuple(destino_list)
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
-            mqtt_cliente.publish("pisid_mazeact", "{Type:CloseAllDoor, Player:4}", 2) #mudar para fechar todas as portas de uma sala
-            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index,))).start()
+            closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
+            (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
 
 ##################Codigo Principal##################
 #cliente MySQL (Cloud)
@@ -116,7 +146,7 @@ except Exception as e:
     num_salas= 50
     num_marsamis= 50
 
-mysql_cliente.close()
+# mysql_cliente.close()
 
 contador_marsamis= []
 tentativa_gatilho= []

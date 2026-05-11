@@ -94,7 +94,7 @@ def sound_anomalo(registo, player):
 
     return False, ""
 
-def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas):
+def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas, active):
     if(player != 4):
         return True, "Jogador Invalido"
 
@@ -120,9 +120,15 @@ def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas):
     if(destino < 1 or destino > num_salas): #sala destino existe?
         return True, "Room Destiny Invalido"
 
-    #ler cloud
-    if(False): #sala de origem e destino conectadas?
-        return True, "Corredor Nao Existe"
+    #sala de origem e destino conectadas?
+    print("active:",active)
+    print("origin:",origem)
+    if(active == None): #salas nao estao ligadas
+        if(origem != 0): #se origem for 0, "corredor" existe e esta ativo
+            return True, "Corredor Nao Existe"
+    else: #se as salas estao ligdas
+        if(active[0] != 1): #verificar se o corridor esta fechado
+            return True, "Corredor Fechado"
 
     return False, ""
 
