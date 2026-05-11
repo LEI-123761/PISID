@@ -73,16 +73,18 @@ def on_message(client, userdata, msg):
         print(f"[SOM] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDSom FROM Som WHERE IDSom="+str(data.get("Id")))
+        mycursor.execute("SELECT IDMongo FROM Som WHERE IDMongo="+str(data.get("Id")))
         result= mycursor.fetchone()
 
         if(result == None):
             # insere a leitura de ruído na tabela Som
             mycursor.execute("""
-                             INSERT INTO Som (IDSimulacao, Som)
+                             INSERT INTO Som (IDSimulacao, IDMongo, Hora, Som)
                              VALUES (%s, %s)
                              """, (
                                  ID_SIMULACAO,
+                                 data.get("Id"),
+                                 data.get("Hour"),
                                  data.get("Sound"),
                              ))
             mysqlclient.commit()

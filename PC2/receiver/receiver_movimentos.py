@@ -75,7 +75,7 @@ def on_message(client, userdata, msg):
             return
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDMedicao FROM MedicoesPassagens WHERE IDMedicao="+str(data.get("Id")))
+        mycursor.execute("SELECT IDMongo FROM MedicoesPassagens WHERE IDMongo="+str(data.get("Id")))
         result= mycursor.fetchone()
 
         if(result == None):
@@ -83,10 +83,11 @@ def on_message(client, userdata, msg):
             # insere o movimento no MySQL
             # %s são placeholders protegidos contra SQL injection
             mycursor.execute("""
-                INSERT INTO MedicoesPassagens (IDSimulacao, SalaOrigem, SalaDestino, Marsami, Status)
+                INSERT INTO MedicoesPassagens (IDSimulacao, IDMongo, SalaOrigem, SalaDestino, Marsami, Status)
                 VALUES (%s, %s, %s, %s, %s)
             """, (
                 ID_SIMULACAO,
+                data.get("Id"),
                 data.get("RoomOrigin"),
                 data.get("RoomDestiny"),
                 data.get("Marsami"),

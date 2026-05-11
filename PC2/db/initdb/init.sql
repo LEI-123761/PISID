@@ -38,6 +38,7 @@ CREATE TABLE Simulacao (
 CREATE TABLE MedicoesPassagens (
     IDMedicao BIGINT AUTO_INCREMENT PRIMARY KEY,
     IDSimulacao INT,
+    IDMongo INT,
     Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     SalaOrigem INT,
     SalaDestino INT,
@@ -53,6 +54,7 @@ CREATE TABLE MedicoesPassagens (
 CREATE TABLE Temperatura (
     IDTemperatura BIGINT AUTO_INCREMENT PRIMARY KEY,
     IDSimulacao INT,
+    IDMongo INT,
     Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Temperatura DECIMAL(5,2),
 
@@ -65,6 +67,7 @@ CREATE TABLE Temperatura (
 CREATE TABLE Som (
     IDSom BIGINT AUTO_INCREMENT PRIMARY KEY,
     IDSimulacao INT,
+    IDMongo INT,
     Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Som DECIMAL(5,2),
 

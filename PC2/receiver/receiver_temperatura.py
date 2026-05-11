@@ -98,16 +98,18 @@ def on_message(client, userdata, msg):
         print(f"[TEMP] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDTemperatura FROM Temperatura WHERE IDTemperatura="+str(data.get("Id")))
+        mycursor.execute("SELECT IDMongo FROM Temperatura WHERE IDMongo="+str(data.get("Id")))
         result= mycursor.fetchone()
 
         if(result == None):
             # insere a leitura de temperatura na tabela Temperatura
             mycursor.execute("""
-                             INSERT INTO Temperatura (IDSimulacao, Temperatura)
-                             VALUES (%s, %s)
+                             INSERT INTO Temperatura (IDSimulacao, IDMongo, Hora, Temperatura)
+                             VALUES (%s, %s, %s, %s)
                              """, (
                                  ID_SIMULACAO,
+                                 data.get("Id"),
+                                 data.get("Hour"),
                                  data.get("Temperature"),
                              ))
             mysqlclient.commit()
