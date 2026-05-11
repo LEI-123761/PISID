@@ -5,56 +5,171 @@ services:
     image: mongo:latest
     container_name: mongo1
     restart: always
-    command:
-      - mongod
-      - --replSet
-      - rs0
-      - --bind_ip_all
     ports:
       - "30001:27017"
-    networks:
-      - mongo-network
-    volumes:
-      - mongo1_data:/data/db
-      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    command: mongod --replSet rs0 --bind_ip_all
 
   mongo2:
     image: mongo:latest
     container_name: mongo2
     restart: always
-    command:
-      - mongod
-      - --replSet
-      - rs0
-      - --bind_ip_all
     ports:
       - "30002:27017"
-    networks:
-      - mongo-network
-    volumes:
-      - mongo2_data:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
 
   mongo3:
     image: mongo:latest
     container_name: mongo3
     restart: always
-    command:
-      - mongod
-      - --replSet
-      - rs0
-      - --bind_ip_all
     ports:
       - "30003:27017"
-    networks:
-      - mongo-network
+    command: mongod --replSet rs0 --bind_ip_all
+
+  mongo-setup:
+    image: mongo:latest
+    container_name: mongo-setup
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+    command: >
+      bash -c "
+        echo 'Aguardando MongoDBs...' &&
+        sleep 20 &&
+        echo 'Configurando replica set com prioridades...' &&
+        mongosh --host mongo1:27017 --eval '
+          try {
+            rs.initiate({
+              _id: \"rs0\",
+              members: [
+                {_id: 0, host: \"mongo1:27017\", priority: 2},
+                {_id: 1, host: \"mongo2:27017\", priority: 1},
+                {_id: 2, host: \"mongo3:27017\", priority: 1}
+              ]
+            });
+            print(\"Replica set iniciado!\");
+      
+            // Aguarda eleição
+            sleep(5000);
+      
+            // Verifica
+            print(\"Status após configuração:\");
+            rs.status().members.forEach(m => print(\"  \" + m.name + \" -> \" + m.stateStr));
+      
+          } catch(e) {
+            if (e.codeName === \"AlreadyInitialized\") {
+              print(\"ℹReplica set já estava configurado\");
+              print(\"Status atual:\");
+              rs.status().members.forEach(m => print(\"  \" + m.name + \" -> \" + m.stateStr));
+            } else {
+              print(\"Erro: \" + e.message);
+            }
+          }
+        '
+      "
+
+  mysql_connection:
+#    extends:
+#      file: ../PC2/docker-compose.yml
+#      service: mysql
+    platform: linux/amd64
+    image: mysql:8.0
+    container_name: mysql_connection
+    ports:
+      - "13307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: maze
+      MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password
     volumes:
-      - mongo3_data:/data/db
+      - mysql_data:/var/lib/mysql
+      - ../PC2/db/initdb:/docker-entrypoint-initdb.d
+    depends_on:
+      - mongo-setup
+
+  feedback:
+    image: python:3.11
+    container_name: feedback
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/feedback.py"
+    depends_on:
+      - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  script_som:
+    image: python:3.11
+    container_name: script_som
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python scripts_filtro/sound_to_mongo.py"
+    depends_on:
+      - mysql_connection
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  script_temp:
+    image: python:3.11
+    container_name: script_temp
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python scripts_filtro/temp_to_mongo.py"
+    depends_on:
+      - mysql_connection
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  script_moves:
+    image: python:3.11
+    container_name: script_moves
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install mysql-connector-python && pip install paho-mqtt && python scripts_filtro/move_to_mongo.py"
+    depends_on:
+      - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  publisher_som:
+    image: python:3.11
+    container_name: publisher_som
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_ruido.py"
+    depends_on:
+      - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  publisher_temp:
+    image: python:3.11
+    container_name: publisher_temp
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_temperatura.py"
+    depends_on:
+      - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  publisher_moves:
+    image: python:3.11
+    container_name: publisher_moves
+    working_dir: /PISID_Project/PC1
+    volumes:
+      - .:/PISID_Project/PC1
+    command: sh -c "pip install pymongo && pip install paho-mqtt && python publishers/publisher_movimentos.py"
+    depends_on:
+      - mongo-setup
+    environment:
+      - PYTHONUNBUFFERED=1
 
 volumes:
-  mongo1_data:
-  mongo2_data:
-  mongo3_data:
-
-networks:
-  mongo-network:
-    driver: bridge
+  mysql_data:

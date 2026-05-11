@@ -31,7 +31,7 @@ if ($conn->connect_error) {
 }
 
 // 3. Consulta (Usando MySQLi preparada para evitar SQL Injection)
-$sql = "SELECT equipa FROM utilizador WHERE email = ?";
+$sql = "SELECT Equipa FROM Utilizador WHERE Email = ?";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {
@@ -42,7 +42,7 @@ if ($stmt) {
 
     if ($user) {
         $response['success'] = true;
-        $response['IDGrupo'] = $user['equipa'];
+        $response['IDGrupo'] = $user['Equipa'];
         $response['message'] = 'Login bem-sucedido.';
     } else {
         $response['message'] = 'Utilizador não encontrado.';

@@ -7,38 +7,36 @@
 # O receiver_temperatura.py no PC2 recebe essas mensagens
 # e insere-as no MySQL.
 
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
 import time
 
 #configuração
-MONGO_URI   = "mongodb://localhost:27017/"
+MONGO_URI   = "mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0"
 DB_NAME     = "SensorData"
 COLLECTION  = "temps_received"
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT   = 1883
-MQTT_TOPIC  = "pisid_mazetemp_4"
+MQTT_TOPIC  = "mazetemp_4"
 CLIENT_ID   = "pisid_publisher_temperatura"
 
 #callbacks MQTT
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print(f"[TEMP] Ligado ao broker | session present: {flags['session present']}")
+def on_connect(client, userdata, flags, reason_code, properties=None):
+    if reason_code == 0:
+        print(f"[TEMP] Ligado ao broker | session present:  ") # {flags['session_present']}")
     else:
-        print(f"[TEMP] Erro ao ligar, rc={rc}")
+        print(f"[TEMP] Erro ao ligar, rc={reason_code}")
 
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[TEMP] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
 mongo_client = MongoClient(MONGO_URI)
-collection   = mongo_client[DB_NAME][COLLECTION]
-
+collection = mongo_client[DB_NAME][COLLECTION]
 
 #ligação MQTT
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
@@ -50,21 +48,19 @@ print("[TEMP] Publisher iniciado...")
 #loop principal para buscar coisas no mongo
 while True:
     try:
-        docs = list(collection.find({"Sent": False}).sort("id_seq", 1))
+        docs = list(collection.find({"Sent": False}).sort("Id", 1))
 
         for doc in docs:
             payload = {
-                "id_seq":      doc["id_seq"],
-                "Player":      doc.get("Player"),
-                "Hour":        doc.get("Hour"),
-                "Temperature": doc.get("Temperature"),
+                "Id":doc.get("Id"),
+                "Hour":doc.get("Hour"),
+                "Temperature":doc.get("Temperature")
             }
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
-            result.wait_for_publish()
-
-            collection.update_one({"_id": doc["_id"]}, {"$set": {"Sent": True}})
-            print(f"[TEMP] Enviado id_seq={payload['id_seq']} e marcado como enviado.")
-
+            if result[0] == 0:
+                print(f"[TEMP] Enviado id={payload['Id']}")
+            else:
+                print(f"[TEMP] Erro ao enviar mqtt")
 
     except Exception as e:
         print(f"[TEMP] Erro: {e}")

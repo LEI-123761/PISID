@@ -16,14 +16,19 @@ services:
       - pc2-network
 
   web:
-    image: php:apache
+    build:
+      context: .
+      dockerfile: Dockerfile-web
     container_name: web
     volumes:
-      - ./scripts/php:/var/www/html
+      - ./scripts/php:/var/www/html/maze_app_php
+      - ./web:/var/www/html/web
     ports:
       - "8080:80"
     depends_on:
       - mysql
+    networks:
+      - pc2-network
 
   phpmyadmin:
     image: phpmyadmin:latest

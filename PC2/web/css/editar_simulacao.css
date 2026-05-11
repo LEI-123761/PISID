@@ -1,0 +1,64 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.container {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.edit-box {
+    width: 250px;
+    margin: 0 auto;
+    padding: 25px;
+    border: 3px solid #555;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+label {
+    margin-bottom: 8px;
+    font-size: 18px;
+    color: #444;
+}
+
+textarea {
+    font-size: 13px;
+    width: 100%;
+    height: 200px;
+    box-sizing: border-box;
+    padding: 10px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+button {
+    margin: 30px auto 0 auto;
+    padding: 8px 20px;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.cancel{
+    background-color: #aaaaaa;
+}
+
+.button-container {
+    display: flex;            /* Ativa o modo lado a lado */
+    flex-direction: row;      /* Garante que fiquem na horizontal */
+    justify-content: space-between; /* Espaça os botões (um à esquerda, outro à direita) */
+    width: 100%;              /* Ocupa a largura total do formulário */
+    gap: 10px;                /* Cria um pequeno espaço entre os botões */
+    margin-top: 20px;         /* Espaço acima dos botões */
+}
+
+/* Ajuste nos botões individuais */
+.button-container button {
+    margin: 0;                /* Remove o "margin: 30px auto" que tinhas antes */
+    flex: 1;                  /* Faz com que ambos tenham o mesmo tamanho (opcional) */
+}

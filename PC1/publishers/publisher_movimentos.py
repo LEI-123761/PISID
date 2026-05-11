@@ -13,34 +13,33 @@ import json
 import time
 
 #configuração
-MONGO_URI   = "mongodb://localhost:27017/"
+MONGO_URI   = "mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0"
 DB_NAME     = "SensorData"
 COLLECTION  = "moves_received"
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT   = 1883
-MQTT_TOPIC  = "pisid_mazemov_4"
+MQTT_TOPIC  = "mazemov_4"
 CLIENT_ID   = "pisid_publisher_movimentos"
 
 # chamada automatica quando se liga ao broker
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print(f"[MOV] Ligado ao broker | session present: {flags['session present']}")
+def on_connect(client, userdata, flags, reason_code, properties=None):
+    if reason_code == 0:
+        print(f"[MOV] Ligado ao broker | session present: ") #{flags['session present']}")
     else:
-        print(f"[MOV] Erro ao ligar, rc={rc}")
+        print(f"[MOV] Erro ao ligar, rc={reason_code}")
 
 # chamada automaticamente quando o broker confirma recepção
-def on_publish(client, userdata, mid):
+def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[MOV] Mensagem mid={mid} confirmada pelo broker")
 
 #ligação MongoDB
 mongo_client = MongoClient(MONGO_URI)
 collection   = mongo_client[DB_NAME][COLLECTION]
 
-
 #ligação MQTT
 # clean_session=False activa sessão persistente — o broker guarda
 # mensagens QoS 2 pendentes se o script cair e reiniciar
-mqtt_client = mqtt.Client(client_id=CLIENT_ID, clean_session=False)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
@@ -55,22 +54,24 @@ while True:
         # busca apenas documentos ainda não enviados
         # quando o feedback.py confirmar entrega, Sent muda para True
         # e esses documentos deixam de aparecer aqui
-        docs = list(collection.find({"Sent": False}).sort("id_seq", 1))
+        docs = list(collection.find({"Sent": False}).sort("Id", 1))
 
         for doc in docs:
             # id_seq é o identificador incremental (SERIA IMPLEMENTADO NA INSERCAO DA NUVEM PARA O MONGO????)
             payload = {
-                "id_seq":      doc["id_seq"],
-                "Player":      doc.get("Player"),
+                "Id":      doc.get("Id"),
                 "Marsami":     doc.get("Marsami"),
                 "RoomOrigin":  doc.get("RoomOrigin"),
                 "RoomDestiny": doc.get("RoomDestiny"),
-                "Status":      doc.get("Status"),
+                "Status":      doc.get("Status")
             }
             # wait_for_publish() bloqueia até o handshake estar completo
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=2)
             result.wait_for_publish()
-            print(f"[MOV] Enviado id_seq={payload['id_seq']}")
+            if result[0] == 0:
+                print(f"[MOV] Enviado Id={payload['Id']}")
+            else:
+                print(f"[MOV] Erro ao enviar mqtt")
 
     except Exception as e:
         print(f"[MOV] Erro: {e}")

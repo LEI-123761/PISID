@@ -1,0 +1,8 @@
+FROM php:8.2-apache
+RUN docker-php-ext-install mysqli
+
+# copia o projeto para o root do apache
+COPY ./web /var/www/html/
+
+# ativa rewrite (boa prática)
+RUN a2enmod rewrite

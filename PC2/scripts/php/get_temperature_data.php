@@ -31,7 +31,7 @@ if ($conn->connect_error) {
 }
 
 // Query para obter os dados de temperatura
-$sql = "SELECT temperatura, idtemperatura FROM temperatura ORDER BY idtemperatura ASC";
+$sql = "SELECT Temperatura as temperatura, IDTemperatura as idtemperatura FROM Temperatura ORDER BY IDTemperatura ASC";
 $result = $conn->query($sql);
 
 if ($result) {

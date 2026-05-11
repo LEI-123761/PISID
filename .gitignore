@@ -3,3 +3,6 @@
 .env
 .vscode
 .idea
+__pycache__/
+*.py[codz]
+*$py.class

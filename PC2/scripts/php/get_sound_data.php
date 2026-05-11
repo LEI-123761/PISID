@@ -28,7 +28,7 @@ if ($conn->connect_error) {
     exit;
 }
 
-$sql = "SELECT som, idsom FROM som ORDER BY idsom ASC";
+$sql = "SELECT Som as som, IDSom as idsom FROM Som ORDER BY IDSom ASC";
 $result = $conn->query($sql);
 
 if ($result) {
