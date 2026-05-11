@@ -420,25 +420,12 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE Criar_jogo(
+    IN p_idUtilizador INT
     IN p_descricao TEXT
 )
 BEGIN
-    DECLARE v_email VARCHAR(255);
-    DECLARE v_idUtilizador INT;
-
-    -- Extrair o email do USER()
-    SET v_email = SUBSTRING_INDEX(USER(), '@', 2);
-
-    -- Obter o IDUtilizador correspondente
-    SELECT IDUtilizador
-    INTO v_idUtilizador
-    FROM Utilizador
-    WHERE Email = v_email
-    LIMIT 1;
-
-    -- Inserir nova simulação
     INSERT INTO Simulacao (Descricao, IDUtilizador, Status, DataHoraInicio)
-    VALUES (p_descricao, v_idUtilizador, 'Criado', NOW());
+    VALUES (p_descricao, p_idUtilizador, 'Criado', NOW());
 END$$
 
 DELIMITER ;
