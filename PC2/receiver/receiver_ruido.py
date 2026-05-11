@@ -14,94 +14,78 @@ import json
 import utils
 from connection import connect_to_mysql
 
-#configuração
-MQTT_TOPIC_SUB = "mazesound_4"
+# Configuração
+MQTT_TOPIC_SUB = "pisid_mazesound_4"
 MQTT_TOPIC_FB  = "pisid_feedback_4"
+MQTT_TOPIC_ACT = "pisid_mazeact"
 CLIENT_ID      = "pisid_receiver_ruido"
+PLAYER_ID      = 4
 
 MYSQL_CONFIG = {
     "host":     utils.HOST,
     "user":     utils.SOUNDS_USER,
     "password": utils.SOUNDS_PASSWORD,
-    "database": utils.DATABASE 
+    "database": utils.DATABASE
 }
 
-#ligação MySQL persistente
-tentativas = utils.MYSQL_ATTEMPTS
-mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
+mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=utils.MYSQL_ATTEMPTS)
+ultima_msg_id = 0
 
 if mysqlclient:
-    mycursor    = mysqlclient.cursor()
-    print("[SOM] Ligado ao MySQL")
-
-    # obtém o ID da simulação activa
+    mycursor = mysqlclient.cursor()
+    mycursor.execute("SELECT MAX(ID) FROM Mensagens")
+    res = mycursor.fetchone()[0]
+    ultima_msg_id = res if res is not None else 0
+    print(f"[SOM] A monitorizar alertas a partir do ID: {ultima_msg_id}")
     ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
-    if ID_SIMULACAO is None:
-        print("[SOM] Aviso: sem simulação activa no arranque")
-else: 
-    print("[SOM] Erro: erro ao ligar a BD depois de ", tentativas, " tentativas")
+def check_atuadores_som(mysql_conn, mqtt_client):
+    global ultima_msg_id
+    try:
+        cursor = mysql_conn.cursor(buffered=True)
+        query = "SELECT ID, Msg FROM Mensagens WHERE Sensor = 'SOM' AND ID > %s ORDER BY ID ASC"
+        cursor.execute(query, (ultima_msg_id,))
+        alertas = cursor.fetchall()
 
-#callback mensagem
+        for id_msg, msg_texto in alertas:
+            if "maxim" in msg_texto.lower():
+                comando = {"Type": "CloseAllDoor", "Player": PLAYER_ID}
+                mqtt_client.publish(MQTT_TOPIC_ACT, json.dumps(comando), qos=1)
+                print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
+            ultima_msg_id = id_msg
+        cursor.close()
+    except Exception as e:
+        print(f"[ATUADOR-SOM] Erro: {e}")
+
 def on_message(client, userdata, msg):
-    print(msg.payload.decode())
     global ID_SIMULACAO
+    # ADICIONA ESTA LINHA PARA TESTE:
+    print(f"DEBUG: Recebi algo no tópico {msg.topic}: {msg.payload.decode()}")
     try:
         if ID_SIMULACAO is None:
-            # Tenta obter id_simulacao novamente
             ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
-            if ID_SIMULACAO is None:
-                print("[SOM] Sem simulação activa, a ignorar mensagem")
-                return
+            if ID_SIMULACAO is None: return
 
         data = json.loads(msg.payload.decode())
-        print(data)
-        print(f"[SOM] Recebido: {data}")
+        mycursor.execute("INSERT INTO Som (IDSimulacao, Som) VALUES (%s, %s)",
+                         (ID_SIMULACAO, data.get("Sound")))
+        mysqlclient.commit()
 
-        #verificar q ID nao existe
-        mycursor.execute("SELECT IDSom FROM Som WHERE IDSom="+str(data.get("Id")))
-        result= mycursor.fetchone()
+        # Verifica se o trigger disparou um alerta de som
+        check_atuadores_som(mysqlclient, client)
 
-        if(result == None):
-            print("Nao existe, podes inserir")
-            # insere a leitura de ruído na tabela Som
-            mycursor.execute("""
-                INSERT INTO Som (IDSimulacao, Som)
-                VALUES (%s, %s)
-            """, (
-                ID_SIMULACAO,
-                data.get("Sound"),
-            ))
-            mysqlclient.commit()
-        else:
-            print("Ja existe, nao vou inserir")
-
-        # feedback publicado após commit confirmado
-        feedback = {
-            "collection": "sounds_received",
-            "Id":     data["Id"],
-            "status":     "ok"
-        }
+        feedback = {"collection": "sounds_received", "id_seq": data["id_seq"], "status": "ok"}
         client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
-        print(f"[SOM] Feedback enviado Id={data['Id']}")
     except Exception as e:
         print(f"[SOM] Erro: {e}")
         mysqlclient.rollback()
 
-#callback ligação
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[SOM] Ligado ao broker: {client._host}")
-        # QoS 1 para ruído — confirmação sem overhead do QoS 2
         client.subscribe(MQTT_TOPIC_SUB, qos=1)
-    else:
-        print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
-#cliente MQTT
-mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(utils.MQTT_BROKER, utils.MQTT_PORT)
-
-print("[SOM] Receiver iniciado...")
 mqtt_client.loop_forever()
