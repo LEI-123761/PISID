@@ -58,24 +58,49 @@ def check_atuadores_som(mysql_conn, mqtt_client):
         print(f"[ATUADOR-SOM] Erro: {e}")
 
 def on_message(client, userdata, msg):
+    print(msg.payload.decode())
     global ID_SIMULACAO
-    # ADICIONA ESTA LINHA PARA TESTE:
-    print(f"DEBUG: Recebi algo no tópico {msg.topic}: {msg.payload.decode()}")
     try:
         if ID_SIMULACAO is None:
+            # Tenta obter id_simulacao novamente
             ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
-            if ID_SIMULACAO is None: return
+            if ID_SIMULACAO is None:
+                print("[SOM] Sem simulação activa, a ignorar mensagem")
+                return
 
         data = json.loads(msg.payload.decode())
-        mycursor.execute("INSERT INTO Som (IDSimulacao, Som) VALUES (%s, %s)",
-                         (ID_SIMULACAO, data.get("Sound")))
-        mysqlclient.commit()
+        print(data)
+        print(f"[SOM] Recebido: {data}")
+
+        #verificar q ID nao existe
+        mycursor.execute("SELECT IDSom FROM Som WHERE IDSom="+str(data.get("Id")))
+        result= mycursor.fetchone()
+
+        if(result == None):
+            print("Nao existe, podes inserir")
+            # insere a leitura de ruído na tabela Som
+            mycursor.execute("""
+                             INSERT INTO Som (IDSimulacao, Som)
+                             VALUES (%s, %s)
+                             """, (
+                                 ID_SIMULACAO,
+                                 data.get("Sound"),
+                             ))
+            mysqlclient.commit()
+        else:
+            print("Ja existe, nao vou inserir")
 
         # Verifica se o trigger disparou um alerta de som
         check_atuadores_som(mysqlclient, client)
 
-        feedback = {"collection": "sounds_received", "id_seq": data["id_seq"], "status": "ok"}
+        # feedback publicado após commit confirmado
+        feedback = {
+            "collection": "sounds_received",
+            "Id":     data["Id"],
+            "status":     "ok"
+        }
         client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+        print(f"[SOM] Feedback enviado Id={data['Id']}")
     except Exception as e:
         print(f"[SOM] Erro: {e}")
         mysqlclient.rollback()
