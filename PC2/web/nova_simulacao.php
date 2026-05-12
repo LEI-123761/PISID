@@ -6,8 +6,10 @@ if (!isset($_SESSION['IDUtilizador'])) {
 }
 
 $user_id = $_SESSION['IDUtilizador'];
+$username = $_SESSION['Email'];
+$password = $_SESSION['Password'];
 
-$ligacao = new mysqli("mysql", "root", "root", "maze");
+$ligacao = new mysqli("mysql", $username, $password, "maze");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btnGuardar'])) {
     $nova_descricao = $_POST['descricao'];

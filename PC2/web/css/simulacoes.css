@@ -40,18 +40,16 @@ body {
     background-color: #222;
 }
 
-/* Content Border (O quadrado que envolve a tabela) */
 .table {
     background-color: white;
-    border: 2px solid #333; /* Borda grossa como no print */
+    border: 3px solid #333;
     padding: 10px;
     border-radius: 4px;
 }
 
-/* Estilização da Tabela */
 table {
     width: 100%;
-    border-collapse: collapse; /* Remove as bordas duplas */
+    border-collapse: collapse;
 }
 
 th {
@@ -71,12 +69,11 @@ td {
 }
 
 .acoes-container {
-    display: flex;
     justify-content: center;
     gap: 8px;
 }
 
-.btn-edit, .btn-play {
+.btn-edit, .btn-play, .btn-info {
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -86,7 +83,7 @@ td {
     transition: 0.2s;
 }
 
-.btn-edit:hover, .btn-play:hover {
+.btn-edit:hover, .btn-play:hover, .btn-info:hover {
     background-color: #e0e0e0;
 }
 
@@ -121,4 +118,14 @@ td[colspan="4"] {
     top: -100px;
     opacity: 0;
     pointer-events: none;
+}
+
+.user-link {
+    transition: 0.3s;
+    text-decoration: underline;
+}
+
+.user-link:hover {
+    color: #000000;
+    cursor: pointer;
 }
