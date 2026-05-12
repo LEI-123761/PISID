@@ -13,6 +13,8 @@ import mysql.connector
 import json
 import utils
 from connection import connect_to_mysql
+import threading
+import time
 
 # Configuração
 MQTT_TOPIC_SUB = "mazesound_4"
@@ -56,6 +58,8 @@ def check_atuadores_som(mysql_conn, mqtt_client):
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
             ultima_msg_id = id_msg
         cursor.close()
+
+        #adicionar uma verificacao se o ultimo msg foi ha mais q 3s segundos para abrir todas as portas
     except Exception as e:
         print(f"[ATUADOR-SOM] Erro: {e}")
 
@@ -73,16 +77,19 @@ def on_message(client, userdata, msg):
         print(f"[SOM] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDSom FROM Som WHERE IDSom="+str(data.get("Id")))
+        mycursor.execute("SELECT IDMongo FROM Som WHERE IDMongo="+str(data.get("Id"))+" AND IDSimulacao="+str(ID_SIMULACAO))
         result= mycursor.fetchone()
 
         if(result == None):
+            print("id", str(data.get("Id")))
             # insere a leitura de ruído na tabela Som
             mycursor.execute("""
-                             INSERT INTO Som (IDSimulacao, Som)
-                             VALUES (%s, %s)
+                             INSERT INTO Som (IDSimulacao, IDMongo, Hora, Som)
+                             VALUES (%s, %s, %s, %s)
                              """, (
                                  ID_SIMULACAO,
+                                 data.get("Id"),
+                                 data.get("Hour"),
                                  data.get("Sound"),
                              ))
             mysqlclient.commit()

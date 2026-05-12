@@ -104,13 +104,13 @@ def receive_msg(client, userdata, message):
             origem_list[0]-= 1
             origem= tuple(origem_list)
 
-            if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3)):
+            if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3) and (origem[0] != 0)):
                 closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
         destino_list[0]+= 1
         destino= tuple(destino_list)
-        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
+        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0)):
             closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
     else:
@@ -120,13 +120,13 @@ def receive_msg(client, userdata, message):
             origem_list[1]-= 1
             origem= tuple(origem_list)
 
-            if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3)):
+            if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3) and (origem[0] != 0)):
                 closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
         destino_list[1]+= 1
         destino= tuple(destino_list)
-        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3)):
+        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0)):
             closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
 
