@@ -120,6 +120,7 @@ CREATE TABLE Parametros (
   LimiarAlertaTemperatura decimal(4,2) DEFAULT 5,
   LimiarAlertaSom decimal(4,2) DEFAULT 5,
 
+  UNIQUE KEY unique_IDSimulacao (IDSimulacao),
   FOREIGN KEY (IDSimulacao) REFERENCES Simulacao(IDSimulacao)
 );
 
@@ -342,12 +343,39 @@ DELIMITER $$
 
 CREATE PROCEDURE Alterar_jogo(
     IN p_idSimulacao INT,
-    IN p_novaDescricao TEXT
+    IN campo_a_alterar VARCHAR(50),
+    IN valor_a_alterar VARCHAR(100)
 )
 BEGIN
-    UPDATE Simulacao
-    SET Descricao = p_novaDescricao
-    WHERE IDSimulacao = p_idSimulacao;
+    IF campo_a_alterar = 'Descricao' THEN
+        UPDATE Simulacao
+        SET Descricao = valor_a_alterar
+        WHERE IDSimulacao = p_idSimulacao;
+
+    ELSEIF campo_a_alterar = 'LimiarTemperatura' THEN
+        INSERT INTO Parametros (IDSimulacao, LimiarTemperatura)
+        VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
+        ON DUPLICATE KEY UPDATE LimiarTemperatura = VALUES(LimiarTemperatura);
+
+    ELSEIF campo_a_alterar = 'LimiarAlertaTemperatura' THEN
+        INSERT INTO Parametros (IDSimulacao, LimiarAlertaTemperatura)
+        VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
+        ON DUPLICATE KEY UPDATE LimiarAlertaTemperatura = VALUES(LimiarAlertaTemperatura);
+
+    ELSEIF campo_a_alterar = 'LimiarSom' THEN
+        INSERT INTO Parametros (IDSimulacao, LimiarSom)
+        VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
+        ON DUPLICATE KEY UPDATE LimiarSom = VALUES(LimiarSom);
+
+    ELSEIF campo_a_alterar = 'LimiarAlertaSom' THEN
+        INSERT INTO Parametros (IDSimulacao, LimiarAlertaSom)
+        VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
+        ON DUPLICATE KEY UPDATE LimiarAlertaSom = VALUES(LimiarAlertaSom);
+
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Campo inválido';
+    END IF;
 END$$
 
 DELIMITER ;
@@ -462,11 +490,34 @@ DELIMITER $$
 
 CREATE PROCEDURE Criar_jogo(
     IN p_idUtilizador INT,
-    IN p_descricao TEXT
+    IN p_descricao TEXT,
+    IN p_limiarTemperatura DECIMAL(4,2),
+    IN p_limiarAlertaTemperatura DECIMAL(4,2),
+    IN p_limiarSom DECIMAL(4,2),
+    IN p_limiarAlertaSom DECIMAL(4,2)
 )
 BEGIN
+    DECLARE v_idSimulacao INT;
+
     INSERT INTO Simulacao (Descricao, IDUtilizador, Status, DataHoraInicio)
     VALUES (p_descricao, p_idUtilizador, 'Criado', NOW());
+
+    SET v_idSimulacao = LAST_INSERT_ID();
+
+    INSERT INTO Parametros (
+        IDSimulacao,
+        LimiarTemperatura,
+        LimiarAlertaTemperatura,
+        LimiarSom,
+        LimiarAlertaSom
+    )
+    VALUES (
+        v_idSimulacao,
+        p_limiarTemperatura,
+        p_limiarAlertaTemperatura,
+        p_limiarSom,
+        p_limiarAlertaSom
+    );
 END$$
 
 DELIMITER ;

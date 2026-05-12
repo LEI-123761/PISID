@@ -83,6 +83,20 @@ services:
       - pc2-network
     environment:
       - PYTHONUNBUFFERED=1
+      
+  cloud:
+    build:
+      context: ..
+      dockerfile: PC2/Dockerfile
+    container_name: cloud
+    command: python ./PC2/receiver/cloud_parameters.py
+    depends_on:
+      - mysql
+    networks:
+      - pc2-network
+    environment:
+      - PYTHONUNBUFFERED=1
+      
 
 volumes:
   mysql_data:
