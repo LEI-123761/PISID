@@ -7,8 +7,10 @@ if (!isset($_SESSION['IDUtilizador'])) {
 
 $user_id = $_SESSION['IDUtilizador'];
 $simulacao_id = $_GET['id'];
+$username = $_SESSION['Email'];
+$password = $_SESSION['Password'];
 
-$ligacao = new mysqli("mysql", "root", "root", "maze");
+$ligacao = new mysqli("mysql", $username, $password, "maze");
 
 $sql = "SELECT * FROM Simulacao WHERE IDSimulacao = ? AND IDUtilizador = ?";
 $stmt = $ligacao->prepare($sql);
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btnGuardar'])) {
     <div>
         <form class="edit-box" method="POST">
             <label for="descricao">Descrição</label>
-            <textarea id="descricao" name="descricao" required><?php echo $dados['Descricao']; ?></textarea>
+            <input id="descricao" name="descricao" value="<?php echo $dados['Descricao']; ?>">
             <div class="button-container">
                 <button type="button" class="cancel" onclick="window.location.href='simulacoes.php'">Cancelar</button>
                 <button type="submit" name="btnGuardar">Guardar</button>

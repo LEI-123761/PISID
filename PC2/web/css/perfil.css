@@ -1,0 +1,106 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container-edit {
+    width: 90%;
+    max-width: 1000px;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.form-compact {
+    background-color: white;
+    border: 3px solid #333;
+    padding: 10px;
+    border-radius: 4px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 30px;
+    align-items: end;
+}
+
+.input-group {
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-group label {
+    font-size: 14px;
+    color: #333;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    font-size: 14px;
+}
+
+.delete-section {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+.btn-delete {
+    width: auto;
+    background-color: #ed1c24;
+    color: white;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+    justify-content: center;
+}
+
+.button-container button {
+    padding: 8px 30px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+
+    color: white;
+}
+
+.cancel {
+    background-color: #aaaaaa;
+}
+
+.save {
+    background-color: #444;
+}

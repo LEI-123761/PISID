@@ -5,6 +5,7 @@ body {
 .container {
     text-align: center;
     margin-top: 50px;
+    border-radius: 4px;
 }
 
 .edit-box {
@@ -12,6 +13,7 @@ body {
     margin: 0 auto;
     padding: 25px;
     border: 3px solid #555;
+
 
     display: flex;
     flex-direction: column;
@@ -57,7 +59,6 @@ button {
     margin-top: 20px;         /* Espaço acima dos botões */
 }
 
-/* Ajuste nos botões individuais */
 .button-container button {
     margin: 0;                /* Remove o "margin: 30px auto" que tinhas antes */
     flex: 1;                  /* Faz com que ambos tenham o mesmo tamanho (opcional) */

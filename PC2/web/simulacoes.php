@@ -6,35 +6,40 @@ if (!isset($_SESSION['IDUtilizador'])) {
     exit();
 }
 $user_id = $_SESSION['IDUtilizador'];
+$username = $_SESSION['Email'];
+$password = $_SESSION['Password'];
 
-$ligacao = new mysqli("mysql", "root", "root", "maze");
+$ligacao = new mysqli("mysql", $username, $password, "maze");
 
 if ($ligacao->connect_error) {
     die("Erro na ligação: " . $ligacao->connect_error);
 }
 
 $warning = "";
+$warning3 = "";
 
 if (isset($_GET['executar_id'])) {
-    $id_para_correr = $_GET['executar_id'];
+    $sql_check = "SELECT COUNT(*) as total FROM Simulacao WHERE IDUtilizador = ? AND Status = 'Correr'";
+    $stmt_check = $ligacao->prepare($sql_check);
+    $stmt_check->bind_param("i", $user_id);
+    $stmt_check->execute();
+    $res_check = $stmt_check->get_result();
+    $row_check = $res_check->fetch_assoc();
 
-    $sql = "SELECT Status FROM Simulacao WHERE IDSimulacao = ? AND IDUtilizador = ?";
-    $stmt = $ligacao->prepare($sql);
-    $stmt->bind_param("ii", $id_para_correr, $user_id);
-    $stmt->execute();
-    $status_atual = $stmt->get_result()->fetch_assoc()['Status'];
-
-    if ($status_atual == 'Correr') {
-        $warning = "A simulação " . $id_para_correr . " já está a correr!";
+    if ($row_check['total'] > 0) {
+        $warning3 = "Já tem uma simulação em execução!";
     } else {
-        //ADICIONAR LINHA DE CÓDIGO QUE EXECUTE O SCRIPT PYTHON OU MAZERUN.EXE
+        $id_para_correr = $_GET['executar_id'];
+
+        $comando = 'cd /d C:\Users\Lenovo\Downloads\mazerun\mazerun && mazerun.exe 4 --broker broker.hivemq.com';
+        $output = shell_exec($comando);
+
         $sql_update = "UPDATE Simulacao SET Status = 'Correr' WHERE IDSimulacao = ? AND IDUtilizador = ?";
         $stmt_up = $ligacao->prepare($sql_update);
         $stmt_up->bind_param("ii", $id_para_correr, $user_id);
 
         if ($stmt_up->execute()) {
             header("Location: " . $_SERVER['PHP_SELF']);
-            exit();
         }
     }
 }
@@ -65,7 +70,7 @@ $resultado = $stmt->get_result();
 <body>
 <div class="container">
     <div class="header-container">
-        <h2 class="title"> Olá, <?php echo $_SESSION['Email']; ?></h2>
+        <h2 class="title"> Olá, <a href="perfil.php" title="Editar perfil" class="user-link"><?php echo $_SESSION['Email']; ?></a></h2>
         <?php if ($warning != ""): ?>
             <div id="popup-warning" class="alert">
                 <?php echo $warning; ?>
@@ -112,9 +117,33 @@ $resultado = $stmt->get_result();
                 }
             </script>
         <?php endif; ?>
+        <?php if ($warning3 != ""): ?>
+            <div id="popup-warning" class="alert">
+                <?php echo $warning3; ?>
+            </div>
+
+            <script>
+                var popup = document.getElementById('popup-warning');
+
+                if (popup) {
+                    setTimeout(function() {
+                        popup.classList.add('show');
+                    }, 100);
+
+                    setTimeout(function() {
+                        popup.classList.remove('show');
+
+                        setTimeout(function() {
+                            popup.remove();
+                        }, 500);
+                    }, 2500);
+                }
+            </script>
+        <?php endif; ?>
+
         <button title="Criar uma nova simulação" class="more" onclick="window.location.href='nova_simulacao.php'">Criar +</button>
     </div>
-    <div class="table" >
+    <div class="table">
         <table>
             <tr>
                 <th>ID</th>
@@ -132,6 +161,7 @@ $resultado = $stmt->get_result();
                         <td class="acoes-container">
                             <button title="Editar" class="btn-edit" onclick="window.location.href='editar_simulacao.php?id=<?php echo $row['IDSimulacao']; ?>'">✎</button>
                             <button title="Correr" class="btn-play" onclick="window.location.href='?executar_id=<?php echo $row['IDSimulacao']; ?>'">▶</button>
+                            <button title="Mais informações" class="btn-info" onclick="window.location.href='simulacao.php?id=<?php echo $row['IDSimulacao']; ?>'">ⓘ</button>
                         </td>
                     </tr>
                 <?php endwhile; ?>

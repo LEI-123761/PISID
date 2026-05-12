@@ -3,6 +3,8 @@ session_start();
 $error="";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
 
     $ligacao = new mysqli("mysql", "root", "root", "maze");
 
@@ -10,11 +12,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Erro na ligação: " . $ligacao->connect_error);
     }
 
-    // Dados do formulário
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
-
-    // Query preparada
     $sql = "CALL Validar_login(?, ?, @valido)";
 
     $stmt = $ligacao->prepare($sql);
@@ -34,6 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $_SESSION['IDUtilizador'] = $dados_user['IDUtilizador'];
         $_SESSION['Email'] = $dados_user['Email'];
+        $_SESSION['Password'] = explode('@', $_SESSION['Email'])[0];
         $_SESSION['Logged'] = true;
 
         header("Location: simulacoes.php");

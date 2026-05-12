@@ -5,6 +5,7 @@ body {
 .container {
     text-align: center;
     margin-top: 50px;
+    border-radius: 4px;
 }
 
 .edit-box {
