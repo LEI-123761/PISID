@@ -50,7 +50,7 @@ cursor= mysql_cliente.cursor()
 try:
     cursor.execute("SELECT IDSimulacao FROM Simulacao WHERE Status='Correr' LIMIT 1")
     id_sim= cursor.fetchone()[0]
-    cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSImulacao= "+str(id_sim))
+    cursor.execute("SELECT LimiarTemperatura FROM Parametros WHERE IDSimulacao= "+str(id_sim))
     threshold_temp= cursor.fetchone()[0]
 except Exception as e:
     print("Exception ", e)
