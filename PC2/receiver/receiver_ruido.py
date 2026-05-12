@@ -41,16 +41,6 @@ if mysqlclient:
     print(f"[SOM] A monitorizar alertas a partir do ID: {ultima_msg_id}")
     ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
-def som_thread():
-    time.sleep(3) #esperar 3 segundos
-
-    if(True): #falta condicao mas nao sei o q por considerando este metado
-        comando = f'{{"Type": OpenAllDoor, "Player": {PLAYER_ID}}}'
-        print(comando)
-        mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
-    else:
-        pass #mandar outro thread e outra msg alerta... 
-
 def check_atuadores_som(mysql_conn, mqtt_client):
     global ultima_msg_id
     try:
@@ -66,11 +56,10 @@ def check_atuadores_som(mysql_conn, mqtt_client):
                 print(comando)
                 mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
-
-                #chamar thread para ver outra vez daqui a 3 segundos (esta parte ficou duvidosa)
-                # (threading.Thread(target=som_thread)).start()
             ultima_msg_id = id_msg
         cursor.close()
+
+        #adicionar uma verificacao se o ultimo msg foi ha mais q 3s segundos para abrir todas as portas
     except Exception as e:
         print(f"[ATUADOR-SOM] Erro: {e}")
 

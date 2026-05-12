@@ -131,36 +131,56 @@ CREATE TRIGGER Trg_alerta_temp AFTER INSERT ON Temperatura FOR EACH ROW BEGIN
     DECLARE tempMax DECIMAL(4,2);
     DECLARE tempMin DECIMAL(4,2);
     DECLARE limiarTemp DECIMAL(4,2);
+    DECLARE lastMsg TIMESTAMP;
+    DECLARE currentTime TIMESTAMP;
 
     SELECT TemperaturaMax, TemperaturaMin, LimiarAlertaTemperatura
     INTO tempMax, tempMin, limiarTemp
     FROM Parametros
     WHERE IDSimulacao = NEW.IDSimulacao;
 
+    /*get ultima msg time*/
+    SELECT HoraEscrita
+    INTO lastMsg
+    FROM Mensagens
+    WHERE IDSimulacao = NEW.IDSimulacao
+    ORDER BY HoraEscrita DESC
+    LIMIT 1;
+
+    IF lastMsg IS NULL THEN
+        SET lastMsg= '2000-01-01 00:00:00';
+    END IF;
+
+    SET currentTime= NOW();
+
     IF NEW.Temperatura >= (tempMax - limiarTemp) THEN
-        INSERT INTO Mensagens (
-            IDSimulacao, Hora, Sala, Sensor, Leitura,
-            TipoAlerta, Msg, HoraEscrita
-        )
-        VALUES (
-            NEW.IDSimulacao, NEW.Hora, NULL, 'TEMP',
-            NEW.Temperatura, 'ALERTA de Temperatura',
-            'Temperatura próxima do limite máximo',
-            NOW()
-        );
+        IF TIMESTAMPDIFF(SECOND, lastMsg, currentTime) >= 3 THEN /*ultima msgs ha 3 segs ou mais?*/
+            INSERT INTO Mensagens (
+                IDSimulacao, Hora, Sala, Sensor, Leitura,
+                TipoAlerta, Msg, HoraEscrita
+            )
+            VALUES (
+                NEW.IDSimulacao, NEW.Hora, NULL, 'TEMP',
+                NEW.Temperatura, 'ALERTA de Temperatura',
+                'Temperatura próxima do limite máximo',
+                NOW()
+            );
+        END IF;
     END IF;
 
     IF NEW.Temperatura <= (tempMin + limiarTemp) THEN
-        INSERT INTO Mensagens (
-            IDSimulacao, Hora, Sala, Sensor, Leitura,
-            TipoAlerta, Msg, HoraEscrita
-        )
-        VALUES (
-            NEW.IDSimulacao, NEW.Hora, NULL, 'TEMP',
-            NEW.Temperatura, 'ALERTA de Temperatura',
-            'Temperatura próxima do limite mínimo',
-            NOW()
-        );
+        IF TIMESTAMPDIFF(SECOND, lastMsg, currentTime) >= 3 THEN /*ultima msgs ha 3 segs ou mais?*/
+            INSERT INTO Mensagens (
+                IDSimulacao, Hora, Sala, Sensor, Leitura,
+                TipoAlerta, Msg, HoraEscrita
+            )
+            VALUES (
+                NEW.IDSimulacao, NEW.Hora, NULL, 'TEMP',
+                NEW.Temperatura, 'ALERTA de Temperatura',
+                'Temperatura próxima do limite mínimo',
+                NOW()
+            );
+        END IF;
     END IF;
 END
 $$
@@ -172,29 +192,45 @@ DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER Trg_alerta_ruido AFTER INSERT ON Som FOR EACH ROW BEGIN
     DECLARE limiarSom DECIMAL(4,2);
+    DECLARE lastMsg TIMESTAMP;
+    DECLARE currentTime TIMESTAMP;
 
     SELECT LimiarAlertaSom
     INTO limiarSom
     FROM Parametros
     WHERE IDSimulacao = NEW.IDSimulacao;
 
+    /*get ultima msg time*/
+    SELECT HoraEscrita /*nao sei se isto da*/
+    INTO lastMsg
+    FROM Mensagens
+    WHERE IDSimulacao = NEW.IDSimulacao
+    ORDER BY HoraEscrita DESC
+    LIMIT 1;
+
+    IF lastMsg IS NULL THEN
+        SET lastMsg= '2000-01-01 00:00:00';
+    END IF;
+
+    SET currentTime= NOW(); /*tb nao sei se isto da XD*/
+
     IF NEW.Som >= (
         SELECT SomMax FROM Parametros
         WHERE IDSimulacao = NEW.IDSimulacao
     ) - limiarSom THEN
-
-        INSERT INTO Mensagens (
-            IDSimulacao, Hora, Sala, Sensor, Leitura,
-            TipoAlerta, Msg, HoraEscrita
-        )
-        VALUES (
-            NEW.IDSimulacao, NOW(), NULL, 'SOM',
-            NEW.Som, 'ALERTA de Som',
-            'Som próximo do limite máximo',
-            NOW()
-        );
+        IF TIMESTAMPDIFF(SECOND, lastMsg, currentTime) >= 3 THEN /*ultima msgs ha 3 segs ou mais?*/
+            INSERT INTO Mensagens (
+                IDSimulacao, Hora, Sala, Sensor, Leitura,
+                TipoAlerta, Msg, HoraEscrita
+            )
+            VALUES (
+                NEW.IDSimulacao, NOW(), NULL, 'SOM',
+                NEW.Som, 'ALERTA de Som',
+                'Som próximo do limite máximo',
+                NOW()
+            );
+        END IF;
     END IF;
-
 END
 $$
 DELIMITER ;
