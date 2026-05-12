@@ -36,8 +36,8 @@ $dados2 = $stmt2->get_result()->fetch_assoc();
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if(!empty($_POST['Descricao'])){
         $campo='Descricao';
-        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?)");
-        $stmt->bind_param("ss", $campo, $_POST['Descricao']);
+        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?, ?)");
+        $stmt->bind_param("iss", $simulacao_id,  $campo, $_POST['Descricao']);
         if ($stmt->execute()) {
             $stmt->close();
         } else {
@@ -47,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if(!empty($_POST['LimiarTemperatura'])){
         $campo='LimiarTemperatura';
-        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?)");
-        $stmt->bind_param("ss", $campo, $_POST['LimiarTemperatura']);
+        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?, ?)");
+        $stmt->bind_param("iss", $simulacao_id,$campo, $_POST['LimiarTemperatura']);
         if ($stmt->execute()) {
             $stmt->close();
         } else {
@@ -58,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if(!empty($_POST['LimiarSom'])){
         $campo='LimiarSom';
-        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?)");
-        $stmt->bind_param("ss", $campo, $_POST['LimiarSom']);
+        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?, ?)");
+        $stmt->bind_param("iss", $simulacao_id,$campo, $_POST['LimiarSom']);
         if ($stmt->execute()) {
             $stmt->close();
         } else {
@@ -69,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if(!empty($_POST['LimiarAlertaTemperatura'])){
         $campo='LimiarAlertaTemperatura';
-        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?)");
-        $stmt->bind_param("ss", $campo, $_POST['LimiarAlertaTemperatura']);
+        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?, ?)");
+        $stmt->bind_param("iss", $simulacao_id, $campo, $_POST['LimiarAlertaTemperatura']);
         if ($stmt->execute()) {
             $stmt->close();
         } else {
@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if(!empty($_POST['LimiarAlertaSom'])){
         $campo='LimiarAlertaSom';
-        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?)");
-        $stmt->bind_param("ss", $campo, $_POST['LimiarAlertaSom']);
+        $stmt = $ligacao->prepare("CALL Alterar_jogo(?, ?, ?)");
+        $stmt->bind_param("iss", $simulacao_id, $campo, $_POST['LimiarAlertaSom']);
         if ($stmt->execute()) {
             $stmt->close();
         } else {
