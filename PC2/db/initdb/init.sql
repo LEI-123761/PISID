@@ -347,27 +347,27 @@ CREATE PROCEDURE Alterar_jogo(
     IN valor_a_alterar VARCHAR(100)
 )
 BEGIN
-    IF campo_a_alterar = 'descricao' THEN
+    IF campo_a_alterar = 'Descricao' THEN
         UPDATE Simulacao
         SET Descricao = valor_a_alterar
         WHERE IDSimulacao = p_idSimulacao;
 
-    ELSEIF campo_a_alterar = 'limiartemperatura' THEN
+    ELSEIF campo_a_alterar = 'LimiarTemperatura' THEN
         INSERT INTO Parametros (IDSimulacao, LimiarTemperatura)
         VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
         ON DUPLICATE KEY UPDATE LimiarTemperatura = VALUES(LimiarTemperatura);
 
-    ELSEIF campo_a_alterar = 'limiaralertatemperatura' THEN
+    ELSEIF campo_a_alterar = 'LimiarAlertaTemperatura' THEN
         INSERT INTO Parametros (IDSimulacao, LimiarAlertaTemperatura)
         VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
         ON DUPLICATE KEY UPDATE LimiarAlertaTemperatura = VALUES(LimiarAlertaTemperatura);
 
-    ELSEIF campo_a_alterar = 'limiarsom' THEN
+    ELSEIF campo_a_alterar = 'LimiarSom' THEN
         INSERT INTO Parametros (IDSimulacao, LimiarSom)
         VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
         ON DUPLICATE KEY UPDATE LimiarSom = VALUES(LimiarSom);
 
-    ELSEIF campo_a_alterar = 'limiaralertasom' THEN
+    ELSEIF campo_a_alterar = 'LimiarAlertaSom' THEN
         INSERT INTO Parametros (IDSimulacao, LimiarAlertaSom)
         VALUES (p_idSimulacao, CAST(valor_a_alterar AS DECIMAL(4,2)))
         ON DUPLICATE KEY UPDATE LimiarAlertaSom = VALUES(LimiarAlertaSom);
