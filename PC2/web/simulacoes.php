@@ -31,8 +31,16 @@ if (isset($_GET['executar_id'])) {
     } else {
         $id_para_correr = $_GET['executar_id'];
 
+
+
+        # COMANDO PARA CORRER O JOGO!!!!!!
+
         $comando = 'cd /d C:\Users\Lenovo\Downloads\mazerun\mazerun && mazerun.exe 4 --broker broker.hivemq.com';
         $output = shell_exec($comando);
+
+        # COMANDO PARA CORRER O JOGO!!!!!!
+
+
 
         $sql_update = "UPDATE Simulacao SET Status = 'Correr' WHERE IDSimulacao = ? AND IDUtilizador = ?";
         $stmt_up = $ligacao->prepare($sql_update);
