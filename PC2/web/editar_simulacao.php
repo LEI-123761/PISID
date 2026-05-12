@@ -112,27 +112,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <form class="edit-box" method="POST">
         <div class="form-grid">
             <div class="input-group-desc">
-                <label for="descricao">Descrição</label>
-                <input type="text" id="descricao" name="descricao" value="<?php echo htmlspecialchars($dados['Descricao']); ?>">
+                <label for="Descricao">Descrição</label>
+                <input type="text" id="Descricao" name="Descricao" value="<?php echo htmlspecialchars($dados['Descricao']); ?>">
             </div>
             <div class="input-group">
-                <label for="limTemp">Limiar Temperatura</label>
-                <input type="number" id="limTemp" name="limTemp" step="0.01" min="0.00" value="<?php echo $dados2['LimiarTemperatura']; ?>">
-            </div>
-
-            <div class="input-group">
-                <label for="limAlertTemp">Limiar Alerta Temperatura</label>
-                <input type="number" id="limAlertTemp" name="limAlertTemp" step="0.01" min="0.00" value="<?php echo $dados2['LimiarAlertaTemperatura']; ?>">
+                <label for="LimiarTemperatura">Limiar Temperatura</label>
+                <input type="number" id="LimiarTemperatura" name="LimiarTemperatura" step="0.01" min="0.00" value="<?php echo $dados2['LimiarTemperatura']; ?>">
             </div>
 
             <div class="input-group">
-                <label for="limSom">Limiar Som</label>
-                <input type="number" id="limSom" name="limSom" step="0.01" min="0.00" value="<?php echo $dados2['LimiarSom']; ?>">
+                <label for="LimiarAlertaTemperatura">Limiar Alerta Temperatura</label>
+                <input type="number" id="LimiarAlertaTemperatura" name="LimiarAlertaTemperatura" step="0.01" min="0.00" value="<?php echo $dados2['LimiarAlertaTemperatura']; ?>">
             </div>
 
             <div class="input-group">
-                <label for="limAlertSom">Limiar Alerta Som</label>
-                <input type="number" id="limAlertSom" name="limAlertSom" step="0.01" min="0.00" value="<?php echo $dados2['LimiarAlertaSom']; ?>" required>
+                <label for="LimiarSom">Limiar Som</label>
+                <input type="number" id="LimiarSom" name="LimiarSom" step="0.01" min="0.00" value="<?php echo $dados2['LimiarSom']; ?>">
+            </div>
+
+            <div class="input-group">
+                <label for="LimiarAlertaSom">Limiar Alerta Som</label>
+                <input type="number" id="LimiarAlertaSom" name="LimiarAlertaSom" step="0.01" min="0.00" value="<?php echo $dados2['LimiarAlertaSom']; ?>" required>
             </div>
         </div>
         <div class="button-container">
