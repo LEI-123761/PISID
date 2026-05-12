@@ -86,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <label for="DataNascimento">Data de Nascimento</label>
                     <input type="date" id="DataNascimento" name="DataNascimento" value="<?php echo $data; ?>">
                 </div>
-                <div class="delete-section">
+                <div class="delete-section" style="grid-column: span 2;">
                     <button type="button" class="btn-delete">Apagar Conta</button>
                 </div>
             </div>

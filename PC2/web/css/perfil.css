@@ -26,7 +26,6 @@ body {
 }
 
 .form-compact {
-    background-color: white;
     border: 3px solid #333;
     padding: 10px;
     border-radius: 4px;
@@ -38,14 +37,13 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px 30px;
-    align-items: end;
 }
 
 .input-group {
-    background-color: #e0e0e0;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .input-group label {
@@ -55,10 +53,11 @@ body {
 
 .input-group input {
     width: 100%;
-    padding: 4px 8px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 2px;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
 .delete-section {
