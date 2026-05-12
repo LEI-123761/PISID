@@ -490,11 +490,34 @@ DELIMITER $$
 
 CREATE PROCEDURE Criar_jogo(
     IN p_idUtilizador INT,
-    IN p_descricao TEXT
+    IN p_descricao TEXT,
+    IN p_limiarTemperatura DECIMAL(4,2),
+    IN p_limiarAlertaTemperatura DECIMAL(4,2),
+    IN p_limiarSom DECIMAL(4,2),
+    IN p_limiarAlertaSom DECIMAL(4,2)
 )
 BEGIN
+    DECLARE v_idSimulacao INT;
+
     INSERT INTO Simulacao (Descricao, IDUtilizador, Status, DataHoraInicio)
     VALUES (p_descricao, p_idUtilizador, 'Criado', NOW());
+
+    SET v_idSimulacao = LAST_INSERT_ID();
+
+    INSERT INTO Parametros (
+        IDSimulacao,
+        LimiarTemperatura,
+        LimiarAlertaTemperatura,
+        LimiarSom,
+        LimiarAlertaSom
+    )
+    VALUES (
+        v_idSimulacao,
+        p_limiarTemperatura,
+        p_limiarAlertaTemperatura,
+        p_limiarSom,
+        p_limiarAlertaSom
+    );
 END$$
 
 DELIMITER ;
