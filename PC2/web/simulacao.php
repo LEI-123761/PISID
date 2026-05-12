@@ -17,15 +17,17 @@ if ($ligacao->connect_error) {
     die("Erro na ligação: " . $ligacao->connect_error);
 }
 
-$sql = "SELECT * FROM Simulacao WHERE IDSimulacao = ? AND IDUtilizador = ?";
-$stmt = $ligacao->prepare($sql);
-$stmt->bind_param("ii", $simulacao_id, $user_id);
+$sql = "SELECT LimiarTemperatura, LimiarSom, LimiarAlertaTemperatura, LimiarAlertaSom FROM Parametros WHERE IDSimulacao = ?";
+$stmt=$ligacao->prepare($sql);
+$stmt->bind_param("i", $simulacao_id);
 $stmt->execute();
-$dados = $stmt->get_result()->fetch_assoc();
+$resultado = $stmt->get_result();
 
-if (!$dados) {
+if (!$resultado) {
     die("Simulação não encontrada ou sem permissão.");
 }
+
+$row = $resultado->fetch_assoc();
 
 ?>
 
@@ -34,40 +36,36 @@ if (!$dados) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes Simulação</title>
-    <link rel="stylesheet" href="css/perfil.css">
+    <title>Detalhes da Simulação <?php echo $simulacao_id ?></title>
+    <link rel="stylesheet" href="css/simulacao.css">
 </head>
 
 <body>
 <div class="container">
-    <h2 class="title">Detalhes Simulação <?php echo $simulacao_id ?>:</h2>
-    <form method="POST" >
-        <div class="form-compact">
-            <div class="form-grid">
-                <div class="input-group">
-                    <label for="limTemp">Limiar Temperatura</label>
-                    <input id="limTemp" name="limTemp">
-                </div>
-                <div class="input-group">
-                    <label for="limSom">Limiar Som</label>
-                    <input id="limSom" name="limSom">
-                </div>
-                <div class="input-group">
-                    <label for="limAlertTemp">Limiar Alerta Temperatura</label>
-                    <input id="limAlertTemp" name="limAlertTemp">
-                </div>
-                <div class="input-group">
-                    <label for="limAlertSom">Limiar Alerta Som</label>
-                    <input id="limAlertSom" name="limAlertSom">
-                </div>
-            </div>
-        </div>
-
-        <div class="button-container">
-            <button type="button" class="cancel" onclick="window.location.href='simulacoes.php'">Cancelar</button>
-            <button type="submit" class="save" name="btnGuardar">Guardar</button>
-        </div>
-    </form>
+    <div class="header-container">
+        <h2 class="title">Detalhes da Simulação <?php echo $simulacao_id ?>:</h2>
+    </div>
+    <div class="table">
+        <table>
+            <tr>
+                <th>Limiar Temperatura</th>
+                <th>Limiar Som</th>
+                <th>Limiar Alerta Temperatura</th>
+                <th>Limiar Alerta Som</th>
+            </tr>
+            <tbody>
+                <tr>
+                    <td><?php echo $row['LimiarTemperatura']; ?></td>
+                    <td><?php echo $row['LimiarSom']; ?></td>
+                    <td><?php echo $row['LimiarAlertaTemperatura']; ?></td>
+                    <td><?php echo $row['LimiarAlertaSom']; ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="button-container">
+        <button type="button" class="" onclick="window.location.href='simulacoes.php'">Voltar</button>
+    </div>
 </div>
 
 </body>
