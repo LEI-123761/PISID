@@ -18,9 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btnGuardar'])) {
     $limSom = $_POST['limSom'];
     $limAlertSom = $_POST['limAlertSom'];
 
-    $sql = "CALL Criar_jogo(?, ?, ?, ?, ?)";
+    $sql = "CALL Criar_jogo(?, ?, ?, ?, ?, ?)";
     $stmt = $ligacao->prepare($sql);
-    $stmt->bind_param("siiii", $nova_descricao, $limTemp, $limAlertTemp, $limSom, $limAlertSom);
+    $stmt->bind_param("isdddd", $user_id, $nova_descricao, $limTemp, $limAlertTemp, $limSom, $limAlertSom);
 
     if ($stmt->execute()) {
         $stmt->close();
