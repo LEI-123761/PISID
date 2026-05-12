@@ -75,7 +75,7 @@ def on_message(client, userdata, msg):
             return
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDMongo FROM MedicoesPassagens WHERE IDMongo="+str(data.get("Id"))+"AND IDSimulacao="+ID_SIMULACAO)
+        mycursor.execute("SELECT IDMongo FROM MedicoesPassagens WHERE IDMongo="+str(data.get("Id"))+" AND IDSimulacao="+str(ID_SIMULACAO))
         result= mycursor.fetchone()
 
         if(result == None):

@@ -98,7 +98,7 @@ def on_message(client, userdata, msg):
         print(f"[TEMP] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDMongo FROM Temperatura WHERE IDMongo="+str(data.get("Id"))+"AND IDSimulacao="+ID_SIMULACAO)
+        mycursor.execute("SELECT IDMongo FROM Temperatura WHERE IDMongo="+str(data.get("Id"))+" AND IDSimulacao="+str(ID_SIMULACAO))
         result= mycursor.fetchone()
 
         if(result == None):

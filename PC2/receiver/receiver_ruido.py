@@ -13,6 +13,8 @@ import mysql.connector
 import json
 import utils
 from connection import connect_to_mysql
+import threading
+import time
 
 # Configuração
 MQTT_TOPIC_SUB = "mazesound_4"
@@ -39,6 +41,16 @@ if mysqlclient:
     print(f"[SOM] A monitorizar alertas a partir do ID: {ultima_msg_id}")
     ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
+def som_thread():
+    time.sleep(3) #esperar 3 segundos
+
+    if(True): #falta condicao mas nao sei o q por considerando este metado
+        comando = f'{{"Type": OpenAllDoor, "Player": {PLAYER_ID}}}'
+        print(comando)
+        mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
+    else:
+        pass #mandar outro thread e outra msg alerta... 
+
 def check_atuadores_som(mysql_conn, mqtt_client):
     global ultima_msg_id
     try:
@@ -54,6 +66,9 @@ def check_atuadores_som(mysql_conn, mqtt_client):
                 print(comando)
                 mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
+
+                #chamar thread para ver outra vez daqui a 3 segundos (esta parte ficou duvidosa)
+                # (threading.Thread(target=som_thread)).start()
             ultima_msg_id = id_msg
         cursor.close()
     except Exception as e:
@@ -73,7 +88,7 @@ def on_message(client, userdata, msg):
         print(f"[SOM] Recebido: {data}")
 
         #verificar q ID nao existe
-        mycursor.execute("SELECT IDMongo FROM Som WHERE IDMongo="+str(data.get("Id"))+"AND IDSimulacao="+ID_SIMULACAO)
+        mycursor.execute("SELECT IDMongo FROM Som WHERE IDMongo="+str(data.get("Id"))+" AND IDSimulacao="+str(ID_SIMULACAO))
         result= mycursor.fetchone()
 
         if(result == None):
