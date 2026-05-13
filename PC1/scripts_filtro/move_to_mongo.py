@@ -9,12 +9,16 @@ import validacoes as v
 def check_occupation_origin(origin_index, closed):
     print("Checking room origin")
     time.sleep(3) #espera 3 segs
+
     origem= contador_marsamis[origin_index]
+    print("Origem contador:", origem)
     if(origem[0] == origem[1]): #se nao sairam/entrarem marsamis
+        print("Scoring")
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((origin_index+1))+"}", 2)
             tentativa_gatilho[origin_index]+= 1
 
+    print("abrir")
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     for c in closed: #abrir todas as portas da sala
         mqtt_cliente.publish("pisid_mazeact",
@@ -24,12 +28,16 @@ def check_occupation_origin(origin_index, closed):
 def check_occupation_destiny(destiny_index, closed):
     print("Checking room destiny")
     time.sleep(3) #espera 3 segs
+
     destino= contador_marsamis[destiny_index]
+    print("Destino contador:", destino)
     if(destino[0] == destino[1]): #se nao sairam marsamis
+        print("Scoring")
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((destiny_index+1))+"}", 2)
             tentativa_gatilho[destiny_index]+= 1
 
+    print("abrir")
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     for c in closed: #abrir todas as portas da sala
         mqtt_cliente.publish("pisid_mazeact",
@@ -48,13 +56,13 @@ def close_room(sala):
         mqtt_cliente.publish("pisid_mazeact",
                              "{Type:CloseDoor, Player:4, "
                              "RoomOrigin:"+str(sala)+", RoomDestiny:"+str(d[0])+"}", 2)
-        closed.append((sala, d[0]))
+        closed.append([sala, d[0]])
 
     for o in origems:
         mqtt_cliente.publish("pisid_mazeact",
                              "{Type:CloseDoor, Player:4, "
                              "RoomOrigin:"+str(o[0])+", RoomDestiny:"+str(sala)+"}", 2)
-        closed.append((o[0], sala))
+        closed.append([o[0], sala])
 
     return closed
 
@@ -62,7 +70,6 @@ def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
     print("RECEIVED: ", msg)
-    print("Num marsamis: ", num_marsamis, " Num salas: ", num_salas)
     msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
 
     player= int((msg_sections[0].split(":"))[1])
@@ -96,37 +103,34 @@ def receive_msg(client, userdata, message):
     destiny_room_index= registo["RoomDestiny"]-1
 
     destino= contador_marsamis[destiny_room_index]
-    destino_list= list(destino)
     if(registo["Marsami"]%2 != 0): #se marsami for odd
         if(origin_room_index != -1): #se sala nao for 0
             origem= contador_marsamis[origin_room_index]
-            origem_list= list(origem)
-            origem_list[0]-= 1
-            origem= tuple(origem_list)
+            origem[0]-= 1
 
             if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3) and (origem[0] != 0)):
+                print("Origem Igual:", origem)
                 closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
-        destino_list[0]+= 1
-        destino= tuple(destino_list)
-        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0)):
+        destino[0]+= 1
+        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0) and (origin_room_index != -1)):
+            print("Destino Igual:", destino)
             closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
     else:
         if(origin_room_index != -1):
             origem= contador_marsamis[origin_room_index]
-            origem_list= list(origem)
-            origem_list[1]-= 1
-            origem= tuple(origem_list)
+            origem[1]-= 1
 
             if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3) and (origem[0] != 0)):
+                print("Origem Igual:", origem)
                 closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
-        destino_list[1]+= 1
-        destino= tuple(destino_list)
-        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0)):
+        destino[1]+= 1
+        if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0) and (origin_room_index != -1)):
+            print("Destino Igual:", destino)
             closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
 
@@ -151,7 +155,7 @@ except Exception as e:
 contador_marsamis= []
 tentativa_gatilho= []
 for i in range(0, num_salas):
-    contador_marsamis.append((0, 0)) #((odd, even), ...)
+    contador_marsamis.append([0, 0]) #([odd, even], ...)
     tentativa_gatilho.append(0)
 
 last_room= []
