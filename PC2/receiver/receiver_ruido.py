@@ -41,6 +41,23 @@ if mysqlclient:
     print(f"[SOM] A monitorizar alertas a partir do ID: {ultima_msg_id}")
     ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
 
+def check_reopen(ultima_msg_id):
+    time.sleep(12) #mais tempo do q os alertas
+
+    print("can i reopen after "+str(ultima_msg_id)+"?")
+    thread_client = connect_to_mysql(MYSQL_CONFIG, attempts=utils.MYSQL_ATTEMPTS)
+    thread_cursor = thread_client.cursor(buffered=True)
+    # query = "SELECT ID FROM Mensagens WHERE Sensor = 'SOM' AND ID > %s ORDER BY ID ASC"
+    thread_cursor.execute("SELECT ID FROM Mensagens WHERE Sensor = 'SOM' AND ID > "+str(ultima_msg_id))
+    alertas = thread_cursor.fetchall()
+    print("Alertas:",alertas)
+
+    if(alertas == []):
+        print("No more alertas")
+        mqtt_client.publish(MQTT_TOPIC_ACT, "{Type:OpenAllDoor, Player:4}", qos=2)
+
+    thread_cursor.close()
+
 def check_atuadores_som(mysql_conn, mqtt_client):
     global ultima_msg_id
     try:
@@ -56,6 +73,8 @@ def check_atuadores_som(mysql_conn, mqtt_client):
                 print(comando)
                 mqtt_client.publish(MQTT_TOPIC_ACT, comando, qos=1)
                 print(f"!!! [ATUADOR-SOM] Ruído Crítico: {id_msg}. Comando CloseAllDoor enviado.")
+
+                (threading.Thread(target=check_reopen, args=(id_msg,))).start()
             ultima_msg_id = id_msg
         cursor.close()
 

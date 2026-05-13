@@ -121,8 +121,6 @@ def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas, act
         return True, "Room Destiny Invalido"
 
     #sala de origem e destino conectadas?
-    print("active:",active)
-    print("origin:",origem)
     if(active == None): #salas nao estao ligadas
         if(origem != 0): #se origem for 0, "corredor" existe e esta ativo
             return True, "Corredor Nao Existe"
