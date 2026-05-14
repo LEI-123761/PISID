@@ -35,6 +35,7 @@ def check_occupation_destiny(destiny_index, closed):
     print("Destino contador:", destino)
     if(destino[0] == destino[1]): #se nao sairam marsamis
         print("Scoring")
+        print("Publishing score for room:", str((destiny_index+1)))
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", '{"Type": Score, "Player": 4, "RoomOrigin": '+str((destiny_index+1))+'}', 2)
             tentativa_gatilho[destiny_index]+= 1
