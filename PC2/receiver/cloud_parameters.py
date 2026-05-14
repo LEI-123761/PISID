@@ -101,4 +101,4 @@ while True:
         except:
             pass
 
-    time.sleep(3)
+    time.sleep(30)
