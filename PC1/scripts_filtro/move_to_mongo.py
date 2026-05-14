@@ -6,6 +6,8 @@ import time
 import threading
 import validacoes as v
 
+CLIENT_ID  = "pisid_filtro_movimentos"
+
 def check_occupation_origin(origin_index, closed):
     print("Checking room origin")
     time.sleep(3) #espera 3 segs
@@ -15,15 +17,15 @@ def check_occupation_origin(origin_index, closed):
     if(origem[0] == origem[1]): #se nao sairam/entrarem marsamis
         print("Scoring")
         for i in range(0, 3):
-            mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((origin_index+1))+"}", 2)
+            mqtt_cliente.publish("pisid_mazeact", '{"Type": Score, "Player": 4, "RoomOrigin": '+str((origin_index+1))+'}', 2)
             tentativa_gatilho[origin_index]+= 1
 
     print("abrir")
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     for c in closed: #abrir todas as portas da sala
         mqtt_cliente.publish("pisid_mazeact",
-                             "{Type:OpenDoor, Player:4, "
-                             "RoomOrigin:"+str(c[0])+", RoomDestiny:"+str(c[1])+"}", 2)
+                             '{"Type": OpenDoor, "Player": 4, '
+                             '"RoomOrigin": '+str(c[0])+', "RoomDestiny": '+str(c[1])+'}', 2)
 
 def check_occupation_destiny(destiny_index, closed):
     print("Checking room destiny")
@@ -34,15 +36,15 @@ def check_occupation_destiny(destiny_index, closed):
     if(destino[0] == destino[1]): #se nao sairam marsamis
         print("Scoring")
         for i in range(0, 3):
-            mqtt_cliente.publish("pisid_mazeact", "{Type:Score, Player:4, Room:"+str((destiny_index+1))+"}", 2)
+            mqtt_cliente.publish("pisid_mazeact", '{"Type": Score, "Player": 4, "RoomOrigin": '+str((destiny_index+1))+'}', 2)
             tentativa_gatilho[destiny_index]+= 1
 
     print("abrir")
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     for c in closed: #abrir todas as portas da sala
         mqtt_cliente.publish("pisid_mazeact",
-                             "{Type:OpenDoor, Player:4, "
-                             "RoomOrigin:"+str(c[0])+", RoomDestiny:"+str(c[1])+"}", 2)
+                             '{"Type": OpenDoor, "Player": 4, '
+                             '"RoomOrigin": '+str(c[0])+', "RoomDestiny": '+str(c[1])+'}', 2)
 
 def close_room(sala):
     cursor.execute("SELECT RoomB FROM Corridor WHERE RoomA="+str(sala))
@@ -53,15 +55,15 @@ def close_room(sala):
 
     closed= []
     for d in destinos:
-        mqtt_cliente.publish("pisid_mazeact",
-                             "{Type:CloseDoor, Player:4, "
-                             "RoomOrigin:"+str(sala)+", RoomDestiny:"+str(d[0])+"}", 2)
+        var = '{"Type": CloseDoor, "Player": 4, "RoomOrigin": '+str(sala)+', "RoomDestiny": '+str(d[0])+'}'
+        mqtt_cliente.publish("pisid_mazeact", var, 2)
         closed.append([sala, d[0]])
+        print("Destino fechado:", var)
 
     for o in origems:
         mqtt_cliente.publish("pisid_mazeact",
-                             "{Type:CloseDoor, Player:4, "
-                             "RoomOrigin:"+str(o[0])+", RoomDestiny:"+str(sala)+"}", 2)
+                             '{"Type": CloseDoor, "Player": 4, '
+                             '"RoomOrigin": '+str(o[0])+', "RoomDestiny": '+str(sala)+'}', 2)
         closed.append([o[0], sala])
 
     return closed
@@ -168,7 +170,7 @@ mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?re
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT
-mqtt_cliente= mqtt.Client()
+mqtt_cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("broker.hivemq.com", 1883)

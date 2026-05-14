@@ -4,6 +4,8 @@ import paho.mqtt.client as mqtt
 import validacoes as v
 import time
 
+CLIENT_ID  = "pisid_filtro_temperatura"
+
 def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
@@ -65,7 +67,7 @@ mongo_cliente= MongoClient("mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?re
 bd= mongo_cliente["SensorData"] #nome da base de dados
 
 #cliente MQTT
-mqtt_cliente= mqtt.Client()
+mqtt_cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, clean_session=True)
 mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("broker.hivemq.com", 1883)
