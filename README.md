@@ -1,5 +1,10 @@
 # PISID Project
 
+## Run Project
+1. In the PC1 Directory run the command "docker compose up"
+2. In the PC2 Directory run the command "docker compose up --build"
+3. Run the mazerun command with player 4 and the broker "broker.hivemq.com" 
+
 ## Project Structure
 
 - **PC1/**  
@@ -36,13 +41,6 @@ pip install -r requirements.txt
 ```
 
 This keeps dependencies isolated from your system Python and avoids version conflicts.
-
-## Setup & Running
-
-In the default path `PISID/`. Run the command
-```bash
-docker compose up -d
-```
 
 ### Requirements
 The only requiment is Docker. 
