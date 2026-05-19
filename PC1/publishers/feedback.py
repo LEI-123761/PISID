@@ -1,13 +1,3 @@
-# **DESCRICAO**
-# feedback.py
-#
-# Este script corre no PC1 (onde está o MongoDB).
-# Subscreve o tópico de feedback no broker MQTT.
-# Quando um receiver (PC2) insere dados no MySQL com sucesso,
-# publica uma confirmação com o id_seq do documento.
-# Este script recebe essa confirmação e marca o documento
-# original no MongoDB como Sent=True, fechando o ciclo.
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
@@ -25,7 +15,6 @@ CLIENT_ID   = "pisid_feedback"
 mongo_client = MongoClient(MONGO_URI)
 db = mongo_client[DB_NAME]
 
-# chamada automaticamente quando chega uma confirmação de um receiver
 def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload.decode())
@@ -37,10 +26,10 @@ def on_message(client, userdata, msg):
 
         # nome da coleção MongoDB a actualizar
         collection_name = data.get("collection")
-        # id_seq do documento a marcar como enviado
+        # id do documento a marcar como enviado
         Id = data.get("Id")
 
-        # marca o documento como Sent=True usando o id_seq incremental
+        # marca o documento como Sent=True usando o id incremental
         filter = {'Id': Id}
         update_operation = {"$set": {"Sent": True}}
         result = db[collection_name].update_one(
@@ -60,12 +49,12 @@ def on_message(client, userdata, msg):
 #callback ligação
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
-        print(f"[FB] Ligado ao broker | session present: ") # {flags['session present']}")
-        client.subscribe(MQTT_TOPIC, qos=1)
+        print(f"[FB] Ligado ao broker | session present")
+        client.subscribe(MQTT_TOPIC, qos=2)
     else:
         print(f"[FB] Erro ao ligar, rc={reason_code}")
 
-#liente MQTT
+#cliente MQTT
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message

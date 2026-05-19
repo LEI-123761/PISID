@@ -1,12 +1,3 @@
-# **DESCRIÇÃO**
-# publisher_temperatura.py
-#
-# Este script corre no PC1 (onde está o MongoDB).
-# Lê documentos de temperatura que ainda não foram enviados
-# (Sent=False) e publica-os no broker MQTT.
-# O receiver_temperatura.py no PC2 recebe essas mensagens
-# e insere-as no MySQL.
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
@@ -24,7 +15,7 @@ CLIENT_ID   = "pisid_publisher_temperatura"
 #callbacks MQTT
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[TEMP] Ligado ao broker | session present:  ") # {flags['session_present']}")
+        print(f"[TEMP] Ligado ao broker | session present")
     else:
         print(f"[TEMP] Erro ao ligar, rc={reason_code}")
 
@@ -56,6 +47,7 @@ while True:
                 "Hour":doc.get("Hour"),
                 "Temperature":doc.get("Temperature")
             }
+
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
             if result[0] == 0:
                 print(f"[TEMP] Enviado id={payload['Id']}")
