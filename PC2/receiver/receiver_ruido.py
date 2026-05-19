@@ -1,15 +1,4 @@
-#**DESCRICAO**
-# receiver_ruido.py
-#
-# Este script corre no PC2 (onde está o MySQL).
-# Subscreve o tópico de ruído no broker MQTT,
-# insere cada leitura recebida no MySQL,
-# e publica uma confirmação no tópico de feedback.
-# O feedback.py no PC1 recebe essa confirmação e marca
-# o documento original no MongoDB como Sent=True.
-
 import paho.mqtt.client as mqtt
-import mysql.connector
 import json
 import utils
 from connection import connect_to_mysql
@@ -44,16 +33,13 @@ if mysqlclient:
 def check_reopen(ultima_msg_id):
     time.sleep(12) #mais tempo do q os alertas
 
-    print("can i reopen after "+str(ultima_msg_id)+"?")
     thread_client = connect_to_mysql(MYSQL_CONFIG, attempts=utils.MYSQL_ATTEMPTS)
     thread_cursor = thread_client.cursor(buffered=True)
-    # query = "SELECT ID FROM Mensagens WHERE Sensor = 'SOM' AND ID > %s ORDER BY ID ASC"
     thread_cursor.execute("SELECT ID FROM Mensagens WHERE Sensor = 'SOM' AND ID > "+str(ultima_msg_id))
     alertas = thread_cursor.fetchall()
-    print("Alertas:",alertas)
 
     if(alertas == []):
-        print("No more alertas")
+        print("[SOM] Alerta terminou, abrir todas as portas")
         mqtt_client.publish(MQTT_TOPIC_ACT, "{Type:OpenAllDoor, Player:4}", qos=2)
 
     thread_cursor.close()
@@ -100,7 +86,7 @@ def on_message(client, userdata, msg):
         result= mycursor.fetchone()
 
         if(result == None):
-            print("id", str(data.get("Id")))
+            print("[MOV] Insert", data)
             # insere a leitura de ruído na tabela Som
             mycursor.execute("""
                              INSERT INTO Som (IDSimulacao, IDMongo, Hora, Som)
@@ -114,7 +100,7 @@ def on_message(client, userdata, msg):
             mysqlclient.commit()
             print("[SOM] Nova leitura inserida com IDSom:", mycursor.lastrowid)
         else:
-            print("[SOM] Já existe, não foi inserido")
+            print("[SOM] ID Repetido")
 
         # Verifica se o trigger disparou um alerta de som
         check_atuadores_som(mysqlclient, client)
@@ -135,8 +121,11 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
         client.subscribe(MQTT_TOPIC_SUB, qos=1)
 
+#cliente MQTT
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(utils.MQTT_BROKER, utils.MQTT_PORT)
+
+print("[SOM] Receiver iniciado...")
 mqtt_client.loop_forever()

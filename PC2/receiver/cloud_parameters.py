@@ -1,6 +1,4 @@
-import paho.mqtt.client as mqtt
 import mysql.connector
-import json
 import utils
 import time
 

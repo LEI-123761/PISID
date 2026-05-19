@@ -112,7 +112,7 @@ CREATE TABLE Parametros (
   TemperaturaMin decimal(4,2) DEFAULT NULL,
   SomMax decimal(4,2) DEFAULT NULL,
 
-  -- outliers (only read on mongo)
+  -- outliers (only read on mongo, can be defined by user)
   LimiarTemperatura decimal(4,2) DEFAULT 4, 
   LimiarSom decimal(4,2) DEFAULT 4,
 
@@ -202,7 +202,7 @@ CREATE TRIGGER Trg_alerta_ruido AFTER INSERT ON Som FOR EACH ROW BEGIN
     WHERE IDSimulacao = NEW.IDSimulacao;
 
     /*get ultima msg time*/
-    SELECT HoraEscrita /*nao sei se isto da*/
+    SELECT HoraEscrita
     INTO lastMsg
     FROM Mensagens
     WHERE IDSimulacao = NEW.IDSimulacao
@@ -213,7 +213,7 @@ CREATE TRIGGER Trg_alerta_ruido AFTER INSERT ON Som FOR EACH ROW BEGIN
         SET lastMsg= '2000-01-01 00:00:00';
     END IF;
 
-    SET currentTime= NOW(); /*tb nao sei se isto da XD*/
+    SET currentTime= NOW();
 
     IF NEW.Som >= (
         SELECT SomMax FROM Parametros
@@ -258,14 +258,13 @@ BEGIN
             VALUES (NEW.IDSimulacao, NEW.SalaOrigem, -1)
             ON DUPLICATE KEY UPDATE
                                         NumeroMarsamisEven = NumeroMarsamisEven - 1;
-    ELSE
+        ELSE
             INSERT INTO OcupacaoLabirinto (IDSimulacao, Sala, NumeroMarsamisOdd)
             VALUES (NEW.IDSimulacao, NEW.SalaOrigem, -1)
             ON DUPLICATE KEY UPDATE
                                      NumeroMarsamisOdd = NumeroMarsamisOdd - 1;
-END IF;
-
-END IF;
+        END IF;
+    END IF;
 
     -- =========================
     -- ADICIONAR ao destino
@@ -275,17 +274,16 @@ END IF;
         VALUES (NEW.IDSimulacao, NEW.SalaDestino, 1)
         ON DUPLICATE KEY UPDATE
                                     NumeroMarsamisEven = NumeroMarsamisEven + 1;
-ELSE
+    ELSE
         INSERT INTO OcupacaoLabirinto (IDSimulacao, Sala, NumeroMarsamisOdd)
         VALUES (NEW.IDSimulacao, NEW.SalaDestino, 1)
         ON DUPLICATE KEY UPDATE
                              NumeroMarsamisOdd = NumeroMarsamisOdd + 1;
-END IF;
+    END IF;
 
 END$$
 
 DELIMITER ;
-
 
 --
 -- Permissões
@@ -483,7 +481,6 @@ BEGIN
 
 END$$
 
-
 DELIMITER ;
 
 DELIMITER $$
@@ -617,7 +614,6 @@ GRANT ALL PRIVILEGES ON maze.* TO 'admin';
 -- EXECUTE correto
 GRANT EXECUTE ON maze.* TO 'admin';
 
-
 -- JOGADOR (leitura global)
 GRANT SELECT ON maze.* TO 'jogador';
 
@@ -626,6 +622,5 @@ GRANT EXECUTE ON PROCEDURE maze.Alterar_utilizador TO 'jogador';
 GRANT EXECUTE ON PROCEDURE maze.Remover_utilizador TO 'jogador';
 GRANT EXECUTE ON PROCEDURE maze.Criar_jogo TO 'jogador';
 GRANT EXECUTE ON PROCEDURE maze.Alterar_jogo TO 'jogador';
-
 
 CALL Cria_utilizador('iappb@iscte-iul.pt', 'Iris', '123456789', 'admin', '1999-08-06', '4');

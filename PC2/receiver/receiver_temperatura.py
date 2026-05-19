@@ -1,18 +1,6 @@
-#**DESCRICAO**
-# receiver_temperatura.py
-#
-# Este script corre no PC2 (onde está o MySQL).
-# Subscreve o tópico de temperatura no broker MQTT,
-# insere cada leitura recebida no MySQL,
-# e publica uma confirmação no tópico de feedback.
-# O feedback.py no PC1 recebe essa confirmação e marca
-# o documento original no MongoDB como Sent=True.
-
 import paho.mqtt.client as mqtt
-import mysql.connector
 import json
 import utils
-import time
 from connection import connect_to_mysql
 
 # Configuração
@@ -103,7 +91,6 @@ def on_message(client, userdata, msg):
 
         if(result == None):
             # insere a leitura de temperatura na tabela Temperatura
-            print("id", str(data.get("Id")))
             mycursor.execute("""
                              INSERT INTO Temperatura (IDSimulacao, IDMongo, Hora, Temperatura)
                              VALUES (%s, %s, %s, %s)
@@ -138,8 +125,11 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
         client.subscribe(MQTT_TOPIC_SUB, qos=1)
         print(f"[TEMP] Subscreveu {MQTT_TOPIC_SUB}")
 
+#cliente MQTT
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.connect(utils.MQTT_BROKER, utils.MQTT_PORT)
+
+print("[TEMP] Receiver iniciado...")
 mqtt_client.loop_forever()
