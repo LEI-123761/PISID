@@ -8,21 +8,27 @@
 ## Project Structure
 
 - **PC1/**  
-  Scripts for MongoDB data ingestion and validation:
-  - `mongoToMqtt.py`, `move_to_mongo.py`, `sound_to_mongo.py`, `temp_to_mongo.py`, `validacoes.py`
-  - `init-scripts/`: MongoDB initialization scripts
+  Scripts for Nuvem -> MongoDB migration and validation:
+  - `move_to_mongo.py`, `sound_to_mongo.py`, `temp_to_mongo.py`, `validacoes.py`
+  Scripts for MongoDB -> MQTT:
+  - `publisher_movimentos.py`, `publisher_ruido.py`, `publisher_temperatura.py`
+  Feedback scripts:
+  - `feedback.py`
+  MongoDB initialization scripts:
+  - `init-scripts/`
 
 - **PC2/**  
   MySQL-based data pipeline and web interface:
   - `db/initdb/init.sql`: MySQL schema and user setup
   - `Dockerfile`: Python service image
   - `docker-compose.yml`: Orchestrates all services
-  - `scripts/`:
-    - `moves_to_sql.py`, `temps_to_sql.py`, `sounds_to_sql.py`: Python scripts for MySQL
-    - `php/`: Web files for the Apache+PHP container
+  - `php/`: Web files for the Apache+PHP container
   - `web/`: PHP scripts for handling HTML form submissions and database interactions
-    - `css/`: Stylesheet for the web interface
-
+  - `css/`: Stylesheet for the web interface
+  Scripts MQTT -> MySQL:
+    - `receiver_movimentos.py`, `receiver_ruido.py`, `receiver_temperatura.py`, `utils.py`,
+      `cloud_parameters.py`, `connection.py`
+    
 - **requirements.txt**  
   Python dependencies for all services
 
