@@ -9,8 +9,7 @@ CLIENT_ID  = "pisid_filtro_temperatura"
 def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
-    print("RECEIVED ", msg)
-    print("threshold: ", threshold_temp)
+    print("[TEMP] Received", msg)
     msg_sections= msg[1:-1].split(', ')
 
     player= int((msg_sections[0].split(":"))[1])
@@ -56,7 +55,7 @@ try:
     threshold_temp= cursor.fetchone()[0]
 except Exception as e:
     print("Exception ", e)
-    threshold_temp= 90
+    threshold_temp= 5
 
 mysql_cliente.close()
 
@@ -71,6 +70,5 @@ mqtt_cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, clean_session=True)
 mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("broker.hivemq.com", 1883)
-# mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazetemp_4")
 mqtt_cliente.loop_forever()

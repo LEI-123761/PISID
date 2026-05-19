@@ -1,7 +1,6 @@
 import mysql.connector
 from pymongo import MongoClient
 import paho.mqtt.client as mqtt
-import paho.mqtt.publish as publish
 import time
 import threading
 import validacoes as v
@@ -9,40 +8,37 @@ import validacoes as v
 CLIENT_ID  = "pisid_filtro_movimentos"
 
 def check_occupation_origin(origin_index, closed):
-    print("Checking room origin")
+    print("[MOV] Checking Room Origin")
     time.sleep(3) #espera 3 segs
 
     origem= contador_marsamis[origin_index]
-    print("Origem contador:", origem)
     if(origem[0] == origem[1]): #se nao sairam/entrarem marsamis
-        print("Scoring")
+        print("[MOV] Ativar Gatilho")
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", '{"Type": Score, "Player": 4, "RoomOrigin": '+str((origin_index+1))+'}', 2)
             tentativa_gatilho[origin_index]+= 1
 
-    print("abrir")
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     for c in closed: #abrir todas as portas da sala
+        print("[MOV] Abrir Portas")
         mqtt_cliente.publish("pisid_mazeact",
                              '{"Type": OpenDoor, "Player": 4, '
                              '"RoomOrigin": '+str(c[0])+', "RoomDestiny": '+str(c[1])+'}', 2)
 
 def check_occupation_destiny(destiny_index, closed):
-    print("Checking room destiny")
+    print("[MOV] Checking Room Destiny")
     time.sleep(3) #espera 3 segs
 
     destino= contador_marsamis[destiny_index]
-    print("Destino contador:", destino)
     if(destino[0] == destino[1]): #se nao sairam marsamis
-        print("Scoring")
-        print("Publishing score for room:", str((destiny_index+1)))
+        print("[MOV] Ativar Gatilho")
         for i in range(0, 3):
             mqtt_cliente.publish("pisid_mazeact", '{"Type": Score, "Player": 4, "RoomOrigin": '+str((destiny_index+1))+'}', 2)
             tentativa_gatilho[destiny_index]+= 1
 
-    print("abrir")
     #abrir portas depois de disparar as 3 vezes ou se nao disparou
     for c in closed: #abrir todas as portas da sala
+        print("[MOV] Abrir Portas")
         mqtt_cliente.publish("pisid_mazeact",
                              '{"Type": OpenDoor, "Player": 4, '
                              '"RoomOrigin": '+str(c[0])+', "RoomDestiny": '+str(c[1])+'}', 2)
@@ -54,12 +50,12 @@ def close_room(sala):
     cursor.execute("SELECT RoomA FROM Corridor WHERE RoomB="+str(sala))
     origems= cursor.fetchall()
 
+    print("[MOV] Fechar Portas")
     closed= []
     for d in destinos:
         var = '{"Type": CloseDoor, "Player": 4, "RoomOrigin": '+str(sala)+', "RoomDestiny": '+str(d[0])+'}'
         mqtt_cliente.publish("pisid_mazeact", var, 2)
         closed.append([sala, d[0]])
-        print("Destino fechado:", var)
 
     for o in origems:
         mqtt_cliente.publish("pisid_mazeact",
@@ -72,8 +68,8 @@ def close_room(sala):
 def receive_msg(client, userdata, message):
     #set up registo
     msg= message.payload.decode("utf-8")
-    print("RECEIVED: ", msg)
-    msg_sections= msg[1:-1].split(', ') #1:-1 por q tem "", mas verificar nos testes
+    print("[MOV] Received", msg)
+    msg_sections= msg[1:-1].split(', ')
 
     player= int((msg_sections[0].split(":"))[1])
     registo= {}
@@ -112,13 +108,11 @@ def receive_msg(client, userdata, message):
             origem[0]-= 1
 
             if((origem[0] == origem[1]) and (tentativa_gatilho[origin_room_index] != 3) and (origem[0] != 0)):
-                print("Origem Igual:", origem)
                 closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
         destino[0]+= 1
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0) and (origin_room_index != -1)):
-            print("Destino Igual:", destino)
             closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
     else:
@@ -127,13 +121,11 @@ def receive_msg(client, userdata, message):
             origem[1]-= 1
 
             if(origem[0] == origem[1] and (tentativa_gatilho[origin_room_index] != 3) and (origem[0] != 0)):
-                print("Origem Igual:", origem)
                 closed= close_room(registo["RoomOrigin"]) #fechar todos as corredores de uma sala
                 (threading.Thread(target=check_occupation_origin, args=(origin_room_index, closed,))).start()
 
         destino[1]+= 1
         if(destino[0] == destino[1] and (tentativa_gatilho[destiny_room_index] != 3) and (destino[0] != 0) and (origin_room_index != -1)):
-            print("Destino Igual:", destino)
             closed= close_room(registo["RoomDestiny"]) #fechar todos as corredores de uma sala
             (threading.Thread(target=check_occupation_destiny, args=(destiny_room_index, closed,))).start()
 
@@ -147,13 +139,10 @@ try:
     num_salas= cursor.fetchone()[0]
     cursor.execute("SELECT numbermarsamis FROM SetupMaze")
     num_marsamis= cursor.fetchone()[0]
-
 except Exception as e:
     print("Exception ", e)
-    num_salas= 50
-    num_marsamis= 50
-
-# mysql_cliente.close()
+    num_salas= 10
+    num_marsamis= 30
 
 contador_marsamis= []
 tentativa_gatilho= []
@@ -175,6 +164,5 @@ mqtt_cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID
 mqtt_cliente.on_message= receive_msg
 
 mqtt_cliente.connect("broker.hivemq.com", 1883)
-# mqtt_cliente.connect("broker.mqttdashboard.com", 1883)
 mqtt_cliente.subscribe("pisid_mazemov_4")
 mqtt_cliente.loop_forever()
