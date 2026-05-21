@@ -75,12 +75,12 @@ def check_atuadores_temp(mysql_conn, mqtt_client):
 def on_message(client, userdata, msg):
     global ID_SIMULACAO
     try:
+        # if ID_SIMULACAO is None:
+        # Tenta obter id_simulacao novamente
+        ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
         if ID_SIMULACAO is None:
-            # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
-            if ID_SIMULACAO is None:
-                print("[TEMP] Sem simulação activa, a ignorar mensagem")
-                return
+            print("[TEMP] Sem simulação activa, a ignorar mensagem")
+            return
 
         data = json.loads(msg.payload.decode())
         print(f"[TEMP] Recebido: {data}")

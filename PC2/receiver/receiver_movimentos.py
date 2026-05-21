@@ -41,12 +41,12 @@ else:
 def on_message(client, userdata, msg):
     global ID_SIMULACAO
     try:
+        # if ID_SIMULACAO is None:
+        # Tenta obter id_simulacao novamente
+        ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
         if ID_SIMULACAO is None:
-            # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
-            if ID_SIMULACAO is None:
-                print("[MOV] Sem simulação activa, a ignorar mensagem")
-                return
+            print("[MOV] Sem simulação activa, a ignorar mensagem")
+            return
 
         # msg.payload são bytes → decode() → string → json.loads() → dicionário
         data = json.loads(msg.payload.decode())
