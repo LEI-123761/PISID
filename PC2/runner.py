@@ -4,6 +4,7 @@ import subprocess
 import threading
 import requests
 import mysql.connector
+import time
 
 app = Flask(__name__)
 
@@ -12,22 +13,21 @@ def thread_code(simulation_id):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         mazerun_path = os.path.join(base_dir, "mazerun", "mazerun.exe")
 
-        print("start")
         subprocess.run([mazerun_path, "4", "--broker", "broker.hivemq.com", "--flagMessage", "1"])
     finally:
-        print("finished")
-        # connection = mysql.connector.connect(
-        #     host="0.0.0.0",
-        #     user="root",
-        #     password="root",
-        #     database="maze",
-        #     port=8080
-        # )
-        #
-        # print("Sim ID:",simulation_id)
-        # cursor = connection.cursor()
-        # cursor.execute("UPDATE Simulacao SET Status = 'Terminado' WHERE IDSimulacao = %s", (simulation_id,))
-        # connection.commit()
+        time.sleep(2)
+
+        connection = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="root",
+            database="maze",
+            port=13306
+        )
+
+        cursor = connection.cursor()
+        cursor.execute("UPDATE Simulacao SET Status = 'Terminado' WHERE IDSimulacao = %s", (simulation_id,))
+        connection.commit()
 
 @app.route("/run")
 def run_game():

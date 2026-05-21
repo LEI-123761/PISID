@@ -316,23 +316,6 @@ GRANT SELECT ON maze.Simulacao TO 'mig_movimentos'@'%';
 INSERT INTO Utilizador (Email, Nome, Telemovel, Tipo, DataNascimento, Equipa) VALUES
 ('Misael_Armando@iscte-iul.pt', 'Misael Armando', '912345678', 'admin', '1990-01-01', 4);
 
--- simulacao
-INSERT INTO Simulacao (Descricao, IDUtilizador, Status)
-VALUES ('Simulação de teste', 1, 'Correr');
-    -- nao tem ON DUPLICATE KEY UPDATE na Simulacao porque: não há nenhuma chave única que provoque “duplicate key”
-
--- parametros
-INSERT INTO Parametros (
-    IDSimulacao,
-    TemperaturaMax,
-    TemperaturaMin,
-    SomMax,
-    LimiarAlertaTemperatura,
-    LimiarAlertaSom
-)
-VALUES (1, 35, 5, 27, 5, 5)
-ON DUPLICATE KEY UPDATE IDSimulacao = IDSimulacao;
-
 -- =========================
 -- STORED PROCEDURES
 -- =========================
