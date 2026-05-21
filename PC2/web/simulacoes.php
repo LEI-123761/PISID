@@ -19,7 +19,7 @@ $warning = "";
 $warning3 = "";
 
 if (isset($_GET['executar_id'])) {
-    $sql_check = "SELECT COUNT(*) as total FROM Simulacao WHERE IDUtilizador = ? AND Status = 'Correr'";
+    $sql_check = "SELECT COUNT(*) as total FROM Simulacao WHERE Status = 'Correr'";
     $stmt_check = $ligacao->prepare($sql_check);
     $stmt_check->bind_param("i", $user_id);
     $stmt_check->execute();
@@ -27,7 +27,7 @@ if (isset($_GET['executar_id'])) {
     $row_check = $res_check->fetch_assoc();
 
     if ($row_check['total'] > 0) {
-        $warning3 = "Já tem uma simulação em execução!";
+        $warning3 = "Já existe uma simulação em execução!";
     } else {
         $id_para_correr = $_GET['executar_id'];
 
