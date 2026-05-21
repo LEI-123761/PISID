@@ -19,7 +19,7 @@ $warning = "";
 $warning3 = "";
 
 if (isset($_GET['executar_id'])) {
-    $sql_check = "SELECT COUNT(*) as total FROM Simulacao WHERE IDUtilizador = ? AND Status = 'Correr'";
+    $sql_check = "SELECT COUNT(*) as total FROM Simulacao WHERE Status = 'Correr'";
     $stmt_check = $ligacao->prepare($sql_check);
     $stmt_check->bind_param("i", $user_id);
     $stmt_check->execute();
@@ -27,20 +27,9 @@ if (isset($_GET['executar_id'])) {
     $row_check = $res_check->fetch_assoc();
 
     if ($row_check['total'] > 0) {
-        $warning3 = "Já tem uma simulação em execução!";
+        $warning3 = "Já existe uma simulação em execução!";
     } else {
         $id_para_correr = $_GET['executar_id'];
-
-
-
-        # COMANDO PARA CORRER O JOGO!!!!!!
-
-        $comando = 'cd /d C:\Users\Lenovo\Downloads\mazerun\mazerun && mazerun.exe 4 --broker broker.hivemq.com';
-        $output = shell_exec($comando);
-
-        # COMANDO PARA CORRER O JOGO!!!!!!
-
-
 
         $sql_update = "UPDATE Simulacao SET Status = 'Correr' WHERE IDSimulacao = ? AND IDUtilizador = ?";
         $stmt_up = $ligacao->prepare($sql_update);
@@ -49,6 +38,12 @@ if (isset($_GET['executar_id'])) {
         if ($stmt_up->execute()) {
             header("Location: " . $_SERVER['PHP_SELF']);
         }
+
+        $ch = curl_init("http://host.docker.internal:5000/run?id=$id_para_correr");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+        curl_exec($ch);
+        curl_close($ch);
     }
 }
 
