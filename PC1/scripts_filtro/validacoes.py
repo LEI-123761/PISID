@@ -1,3 +1,5 @@
+import datetime
+
 def campo_estranho(campo_dado): #verifica se o campo tem caracters estranhas
     char_estranhas= ["@", "#", "!", "$", "%", "&", "*", "?", "~", "«", "»"]
     for char in campo_dado:
@@ -24,18 +26,29 @@ def timestamp_impossivel(timestamp):
     if(len(split_timestamp) != 2):
         return True
 
-    data= split_timestamp[0]
-    horas= split_timestamp[1]
+    currentTimestamp= datetime.datetime.now()
 
     #verificar data
+    data= split_timestamp[0]
+
     split_data= data.split("-")
     if(len(split_data) != 3): #se tem valores negativos ou falta campos
         return True
 
+    currentYear= currentTimestamp.year
+    currentMonth= currentTimestamp.month
+    currentDay= currentTimestamp.day
+
     ano= int(split_data[0])
     mes= int(split_data[1])
     dia= int(split_data[2])
-    if(ano > 2026 or mes > 12 or mes == 0 or dia == 0):
+    if(ano > currentYear or ano <= 0):
+        return True
+
+    if(mes > currentMonth or mes <= 0): #currentMonth nunca vai ser maior q 12 therefore nao e preciso verificar
+        return True
+
+    if(dia > currentDay or dia <= 0):
         return True
 
     dias_31= (1, 3, 5, 7, 8, 10, 12)
@@ -50,6 +63,8 @@ def timestamp_impossivel(timestamp):
         return True
 
     #verificar hora
+    horas= split_timestamp[1]
+
     hora, min, seg= horas.split(":")
     hora= int(hora)
     min= int(min)
