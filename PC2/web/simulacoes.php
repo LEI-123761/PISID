@@ -31,17 +31,6 @@ if (isset($_GET['executar_id'])) {
     } else {
         $id_para_correr = $_GET['executar_id'];
 
-
-
-        # COMANDO PARA CORRER O JOGO!!!!!!
-
-        $comando = 'cd /d C:\Users\Lenovo\Downloads\mazerun\mazerun && mazerun.exe 4 --broker broker.hivemq.com';
-        $output = shell_exec($comando);
-
-        # COMANDO PARA CORRER O JOGO!!!!!!
-
-
-
         $sql_update = "UPDATE Simulacao SET Status = 'Correr' WHERE IDSimulacao = ? AND IDUtilizador = ?";
         $stmt_up = $ligacao->prepare($sql_update);
         $stmt_up->bind_param("ii", $id_para_correr, $user_id);
@@ -49,6 +38,15 @@ if (isset($_GET['executar_id'])) {
         if ($stmt_up->execute()) {
             header("Location: " . $_SERVER['PHP_SELF']);
         }
+
+        # COMANDO PARA CORRER O JOGO!!!!!!
+//        file_get_contents("http://host.docker.internal:5000/run?id=$id_para_correr");
+
+        $ch = curl_init("http://host.docker.internal:5000/run?id=$id_para_correr");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+        curl_exec($ch);
+        curl_close($ch);
     }
 }
 
