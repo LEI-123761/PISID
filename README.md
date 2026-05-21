@@ -3,7 +3,7 @@
 ## Run Project
 1. In the PC1 Directory run the command "docker compose up"
 2. In the PC2 Directory run the command "docker compose up --build"
-3. Run the mazerun command with player 4 and the broker "broker.hivemq.com" 
+3. Run the runner.py script
 
 ## Project Structure
 
