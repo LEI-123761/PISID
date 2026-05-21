@@ -126,22 +126,27 @@ def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas, act
         return True, "Marsami Invalido"
 
     origem= registo["RoomOrigin"]
-    if(origem != destino_anterior): #se sala de origem errada
-        return True, "Room Origin Invalido"
-
     destino= registo["RoomDestiny"]
-    if(destino < 1 or destino > num_salas): #se sala destino nao existe
-        return True, "Room Destiny Invalido"
 
-    #verificar se sala de origem e destino conectadas
-    if(active == None): #salas nao estao ligadas
-        if(origem != 0): #se origem nao for 0, "corredor" nao existe
-            return True, "Corredor Nao Existe"
-    else: #se as salas estao ligadas
-        if(active[0] != 1): #verificar se o corridor nao esta fechado
-            return True, "Corredor Fechado"
+    #ver se esta cansado/sair do jogo
+    if(origem == destino and origem == 0):
+        return False, "Marsami Cansado"
+    else: #se nao esta cansado confirmar origem, destino, e corredor
+        if(origem != destino_anterior): #se sala de origem errada
+            return True, "Room Origin Invalido"
 
-    return False, ""
+        if(destino < 1 or destino > num_salas): #se sala destino nao existe
+            return True, "Room Destiny Invalido"
+
+        #verificar se sala de origem e destino conectadas
+        if(active == None): #salas nao estao ligadas
+            if(origem != 0): #se origem nao for 0, "corredor" nao existe
+                return True, "Corredor Nao Existe"
+        else: #se as salas estao ligadas
+            if(active[0] != 1): #verificar se o corridor nao esta fechado
+                return True, "Corredor Fechado"
+
+    return False, "Move Valido"
 
 def temp_outlier(temp_atual, threshold, last_three):
     if(len(last_three) == 3):
