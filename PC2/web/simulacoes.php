@@ -21,7 +21,6 @@ $warning3 = "";
 if (isset($_GET['executar_id'])) {
     $sql_check = "SELECT COUNT(*) as total FROM Simulacao WHERE Status = 'Correr'";
     $stmt_check = $ligacao->prepare($sql_check);
-    $stmt_check->bind_param("i", $user_id);
     $stmt_check->execute();
     $res_check = $stmt_check->get_result();
     $row_check = $res_check->fetch_assoc();
