@@ -1,13 +1,3 @@
-# **DESCRICAO**
-# publisher_ruido.py
-#
-# Este script corre no PC1 (onde está o MongoDB).
-# Lê documentos de ruído que ainda não foram enviados
-# (Sent=False) e publica-os no broker MQTT.
-# O receiver_ruido.py no PC2 recebe essas mensagens
-# e insere-as no MySQL.
-
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
@@ -25,7 +15,7 @@ CLIENT_ID   = "pisid_publisher_ruido"
 #callbacks MQTT
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[SOM] Ligado ao broker | session present: ") #{flags['session present']}")
+        print(f"[SOM] Ligado ao broker | session present")
     else:
         print(f"[SOM] Erro ao ligar, rc={reason_code}")
 
@@ -56,12 +46,13 @@ while True:
                 "Hour":   doc.get("Hour"),
                 "Sound":  doc.get("Sound")
             }
+
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=1)
             # result.wait_for_publish()
             if result[0] == 0:
                 print(f"[SOM] Enviado Id={payload['Id']}")
             else:
-                print(f"[SOM] Erro ao enviar mqtt")
+                print(f"[SOM] Erro ao enviar MQTT")
 
     except Exception as e:
         print(f"[SOM] Erro: {e}")

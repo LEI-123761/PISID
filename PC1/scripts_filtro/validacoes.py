@@ -1,5 +1,7 @@
+import datetime
+
 def campo_estranho(campo_dado): #verifica se o campo tem caracters estranhas
-    char_estranhas= ["@", "#", "!", "$", "%", "&", "*", "?", "~"]
+    char_estranhas= ["@", "#", "!", "$", "%", "&", "*", "?", "~", "«", "»"]
     for char in campo_dado:
         if char in char_estranhas:
             return True
@@ -24,18 +26,29 @@ def timestamp_impossivel(timestamp):
     if(len(split_timestamp) != 2):
         return True
 
-    data= split_timestamp[0]
-    horas= split_timestamp[1]
+    currentTimestamp= datetime.datetime.now()
 
     #verificar data
+    data= split_timestamp[0]
+
     split_data= data.split("-")
-    if(len(split_data) != 3): #ou tem valores negativos ou falta campos
+    if(len(split_data) != 3): #se tem valores negativos ou falta campos
         return True
 
-    ano= int(split_data[0]) #VERIFICAR SE E ANO BISEXTO
+    currentYear= currentTimestamp.year
+    currentMonth= currentTimestamp.month
+    currentDay= currentTimestamp.day
+
+    ano= int(split_data[0])
     mes= int(split_data[1])
     dia= int(split_data[2])
-    if(ano > 2026 or mes > 12 or mes == 0 or dia == 0):
+    if(ano > currentYear or ano <= 0):
+        return True
+
+    if(mes > currentMonth or mes <= 0): #currentMonth nunca vai ser maior q 12 therefore nao e preciso verificar
+        return True
+
+    if(dia > currentDay or dia <= 0):
         return True
 
     dias_31= (1, 3, 5, 7, 8, 10, 12)
@@ -50,6 +63,8 @@ def timestamp_impossivel(timestamp):
         return True
 
     #verificar hora
+    horas= split_timestamp[1]
+
     hora, min, seg= horas.split(":")
     hora= int(hora)
     min= int(min)
@@ -60,19 +75,19 @@ def timestamp_impossivel(timestamp):
     #se tudo valido
     return False
 
-def temp_anomalo(registo, player): #vai precisar da msg como parametro (vao todos)
+def temp_anomalo(registo, player):
     if(player != 4):
         return True, "Jogador Invalido"
 
     hora= registo["Hour"]
     temp= registo["Temperature"]
-    if(campo_estranho(hora) or campo_estranho(str(temp))): #temp/hora inclui caraters estranhas?
+    if(campo_estranho(hora) or campo_estranho(str(temp))): #se temp/hora inclui caraters estranhas
         return True, "Carater Estranha Detetada"
 
-    if(timestamp_impossivel(hora)): #data e hora possivel?
+    if(timestamp_impossivel(hora)): #se data ou hora impossivel
         return True, "Timestamp Invalido"
 
-    if(temp > 100.0 or temp < -100.0): #valor temp e possivel?
+    if(temp > 100.0 or temp < -100.0): #se valor temp e impossivel
         return True, "Valor Som Invalido"
 
     return False, ""
@@ -83,13 +98,13 @@ def sound_anomalo(registo, player):
 
     hora= registo["Hour"]
     som= registo["Sound"]
-    if(campo_estranho(hora) or campo_estranho(str(som))): #som/hora inclui caraters estranhas?
+    if(campo_estranho(hora) or campo_estranho(str(som))): #se som/hora inclui caraters estranhas
         return True, "Carater Estranha Detetada"
 
-    if(timestamp_impossivel(hora)): #data e hora possivel?
+    if(timestamp_impossivel(hora)): #se data ou hora impossivel
         return True, "Timestamp Invalido"
 
-    if(som > 150.0 or som < 0): #som impossivel?
+    if(som > 150.0 or som < 0): #se som impossivel
         return True, "Valor Som Invalido"
 
     return False, ""
@@ -99,36 +114,39 @@ def move_anomalo(registo, player, num_marsamis, destino_anterior, num_salas, act
         return True, "Jogador Invalido"
 
     for chave in registo: #algum campo inclui caraters estranhas?
-        if(campo_estranho(str(registo[chave]))): #tb verificar a chave#########################
+        if(campo_estranho(str(registo[chave]))):
             return True, "Carater Estranha Detetada"
 
     status= registo["Status"]
-    if(status > 2 or status < 0): #status valida?
+    if(status > 2 or status < 0): #se status invalida
         return True, "Status Invalida"
 
     marsami_num= registo["Marsami"]
-    if(marsami_num < 1 or marsami_num > num_marsamis): #numero de marsami valido?
+    if(marsami_num < 1 or marsami_num > num_marsamis): #se numero de marsami invalido
         return True, "Marsami Invalido"
 
-    # origem= int(registo["RoomOrigin"])
-    # destino_anterior= int(destino_anterior)
     origem= registo["RoomOrigin"]
-    if(origem != destino_anterior): #sala de origem certa?
-        return True, "Room Origin Invalido"
-
     destino= registo["RoomDestiny"]
-    if(destino < 1 or destino > num_salas): #sala destino existe?
-        return True, "Room Destiny Invalido"
 
-    #sala de origem e destino conectadas?
-    if(active == None): #salas nao estao ligadas
-        if(origem != 0): #se origem for 0, "corredor" existe e esta ativo
-            return True, "Corredor Nao Existe"
-    else: #se as salas estao ligdas
-        if(active[0] != 1): #verificar se o corridor esta fechado
-            return True, "Corredor Fechado"
+    #ver se esta cansado/sair do jogo
+    if(origem == destino and origem == 0):
+        return False, "Marsami Cansado"
+    else: #se nao esta cansado confirmar origem, destino, e corredor
+        if(origem != destino_anterior): #se sala de origem errada
+            return True, "Room Origin Invalido"
 
-    return False, ""
+        if(destino < 1 or destino > num_salas): #se sala destino nao existe
+            return True, "Room Destiny Invalido"
+
+        #verificar se sala de origem e destino conectadas
+        if(active == None): #salas nao estao ligadas
+            if(origem != 0): #se origem nao for 0, "corredor" nao existe
+                return True, "Corredor Nao Existe"
+        else: #se as salas estao ligadas
+            if(active[0] != 1): #verificar se o corridor nao esta fechado
+                return True, "Corredor Fechado"
+
+    return False, "Move Valido"
 
 def temp_outlier(temp_atual, threshold, last_three):
     if(len(last_three) == 3):

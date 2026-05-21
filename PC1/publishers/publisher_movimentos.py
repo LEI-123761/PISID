@@ -1,12 +1,3 @@
-# **DESCRICAO**
-# publisher_movimentos.py
-#
-# Este script corre no PC1 (onde está o MongoDB).
-# Lê documentos de movimentos que ainda não foram enviados
-# (Sent=False) e publica-os no broker MQTT.
-# O receiver_movimentos.py no PC2 recebe essas mensagens
-# e insere-as no MySQL.
-
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import json
@@ -24,11 +15,10 @@ CLIENT_ID   = "pisid_publisher_movimentos"
 # chamada automatica quando se liga ao broker
 def on_connect(client, userdata, flags, reason_code, properties=None):
     if reason_code == 0:
-        print(f"[MOV] Ligado ao broker | session present: ") #{flags['session present']}")
+        print(f"[MOV] Ligado ao broker | session present")
     else:
         print(f"[MOV] Erro ao ligar, rc={reason_code}")
 
-# chamada automaticamente quando o broker confirma recepção
 def on_publish(client, userdata, mid, reason_code, properties):
     print(f"[MOV] Mensagem mid={mid} confirmada pelo broker")
 
@@ -37,8 +27,6 @@ mongo_client = MongoClient(MONGO_URI)
 collection   = mongo_client[DB_NAME][COLLECTION]
 
 #ligação MQTT
-# clean_session=False activa sessão persistente — o broker guarda
-# mensagens QoS 2 pendentes se o script cair e reiniciar
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID, clean_session=True)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish  = on_publish
@@ -51,13 +39,11 @@ print("[MOV] Publisher iniciado...")
 #loop principal
 while True:
     try:
-        # busca apenas documentos ainda não enviados
-        # quando o feedback.py confirmar entrega, Sent muda para True
-        # e esses documentos deixam de aparecer aqui
+        # busca apenas documentos q ainda não receberam confirmacao de serem recebidos
         docs = list(collection.find({"Sent": False}).sort("Id", 1))
 
         for doc in docs:
-            # id_seq é o identificador incremental (SERIA IMPLEMENTADO NA INSERCAO DA NUVEM PARA O MONGO????)
+            # id é o identificador incremental
             payload = {
                 "Id":      doc.get("Id"),
                 "Marsami":     doc.get("Marsami"),
@@ -65,13 +51,13 @@ while True:
                 "RoomDestiny": doc.get("RoomDestiny"),
                 "Status":      doc.get("Status")
             }
-            # wait_for_publish() bloqueia até o handshake estar completo
+
             result = mqtt_client.publish(MQTT_TOPIC, json.dumps(payload), qos=2)
-            result.wait_for_publish()
+            result.wait_for_publish() # bloqueia até o handshake estar completo
             if result[0] == 0:
                 print(f"[MOV] Enviado Id={payload['Id']}")
             else:
-                print(f"[MOV] Erro ao enviar mqtt")
+                print(f"[MOV] Erro ao enviar MQTT")
 
     except Exception as e:
         print(f"[MOV] Erro: {e}")

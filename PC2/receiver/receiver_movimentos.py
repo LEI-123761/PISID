@@ -1,15 +1,4 @@
-# **DESCRICAO**
-# receiver_movimentos.py
-#
-# Este script corre no PC2 (onde está o MySQL).
-# Subscreve o tópico de movimentos no broker MQTT,
-# insere cada movimento recebido no MySQL,
-# e publica uma confirmação no tópico de feedback.
-# O feedback.py no PC1 recebe essa confirmação e marca
-# o documento original no MongoDB como Sent=True.
-
 import paho.mqtt.client as mqtt
-import mysql.connector
 import json
 import utils
 
@@ -29,8 +18,7 @@ MYSQL_CONFIG = {
 }
 
 #ligação MySQL persistente
-# ligação aberta uma vez no arranque, mais eficiente do que
-# abrir/fechar a cada mensagem
+# ligação aberta uma vez no arranque
 tentativas = utils.MYSQL_ATTEMPTS
 mysqlclient = connect_to_mysql(MYSQL_CONFIG, attempts=tentativas)
 ID_SIMULACAO = None
@@ -51,19 +39,17 @@ else:
 
 # chamada automaticamente pelo paho quando chega uma mensagem
 def on_message(client, userdata, msg):
-    print(msg.payload.decode())
     global ID_SIMULACAO
     try:
+        # if ID_SIMULACAO is None:
+        # Tenta obter id_simulacao novamente
+        ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
         if ID_SIMULACAO is None:
-            # Tenta obter id_simulacao novamente
-            ID_SIMULACAO = utils.get_id_simulacao(mysqlclient)
-            if ID_SIMULACAO is None:
-                print("[MOV] Sem simulação activa, a ignorar mensagem")
-                return
+            print("[MOV] Sem simulação activa, a ignorar mensagem")
+            return
 
         # msg.payload são bytes → decode() → string → json.loads() → dicionário
         data = json.loads(msg.payload.decode())
-        print(data)
         print(f"[MOV] Recebido: {data}")
 
         if mysqlclient is None:
@@ -79,8 +65,7 @@ def on_message(client, userdata, msg):
         result= mycursor.fetchone()
 
         if(result == None):
-            print("id", str(data.get("Id")))
-            print("Nao existe, podes inserir")
+            print("[MOV] Insert", data)
             # insere o movimento no MySQL
             # %s são placeholders protegidos contra SQL injection
             mycursor.execute("""
@@ -98,7 +83,7 @@ def on_message(client, userdata, msg):
             mysqlclient.commit()
             # feedback publicado DEPOIS do commit
         else:
-            print("Ja existe, nao vou inserir")
+            print("[MOV] ID Repetido")
 
         # garante que Sent=True só é marcado quando os dados estão no MySQL
         feedback = {
@@ -106,14 +91,11 @@ def on_message(client, userdata, msg):
             "Id":     data["Id"],
             "status":     "ok"
         }
-        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=1)
+        client.publish(MQTT_TOPIC_FB, json.dumps(feedback), qos=2)
         print(f"[MOV] Feedback enviado Id={data['Id']}")
     except Exception as e:
         print(f"[MOV] Erro: {e}")
-        # rollback cancela transação incompleta
-        # como feedback não foi publicado, Sent fica False
-        # e o publisher reenvia a mensagem
-        mysqlclient.rollback()
+        mysqlclient.rollback() #cancela transação incompleta
 
 #callback ligação
 # subscrição feita aqui dentro para ser refeita se o broker reiniciar

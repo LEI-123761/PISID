@@ -39,6 +39,9 @@ if (isset($_GET['executar_id'])) {
             header("Location: " . $_SERVER['PHP_SELF']);
         }
 
+        # COMANDO PARA CORRER O JOGO!!!!!!
+//        file_get_contents("http://host.docker.internal:5000/run?id=$id_para_correr");
+
         $ch = curl_init("http://host.docker.internal:5000/run?id=$id_para_correr");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 1);
